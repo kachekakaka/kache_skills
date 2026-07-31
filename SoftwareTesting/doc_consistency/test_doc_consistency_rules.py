@@ -517,7 +517,7 @@ C:\\Users\\example\\project
         self.assert_has(warnings, "发现绝对本地用户路径")
 
     def test_content_semantics_are_outside_skeleton_scope(self) -> None:
-        secret_like = "ghp_0123456789abcdefghijklmnopqrstuvwxyz"
+        secret_like = "ghp_" + "0123456789abcdefghijklmnopqrstuvwxyz"
         self.write(
             "docs/设计文档.md",
             self.read("docs/设计文档.md")
