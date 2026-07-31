@@ -34,7 +34,7 @@ SoftwareTesting/manual/
 archive/SoftwareTesting/
 ```
 
-产品命令、fixture、进程、端口和交付物必须来自用户确认或 `$audit-project-docs` 提供的事实证据；
+产品命令、fixture、进程、端口和交付物必须来自用户确认或 `$project-doc-consistency check` 提供的事实证据；
 骨架只建立承接位置，不自行推导或填写。默认不引入核心矩阵、多层快照、Release runner、产品锁、
 lease、二进制审计或项目级测试 manifest。
 
@@ -84,8 +84,8 @@ ID 使用 `T-` 前缀、大写字母、数字和连字符。新 ID 不得复用�
 - `explicit`：真实数据、破坏性、联网费用或特殊环境，只有用户明确加入才执行。
 
 `T-DOC` 必须存在且固定为 `full`。Registry 不保存日期、数量、耗时、run-id、哈希或结果。骨架只检查
-ID、类别、入口和表格关系；具体测试项的类别与触发条件是否符合项目事实，由 `$audit-project-docs`
-审计。
+ID、类别、入口和表格关系；具体测试项的类别与触发条件是否符合项目事实，由 `$project-doc-consistency check`
+检查。
 
 ## 4. 测试入口职责
 
@@ -107,7 +107,7 @@ ID、类别、入口和表格关系；具体测试项的类别与触发条件是
 
 保存 Registry ID、独有触发条件、输入、fixture、工作目录、规范命令、断言、失败语义和专项清理。
 不复制公共规则或动态结果。骨架只建立其路径和入口；命令、fixture、覆盖声明和产物是否真实，由
-`$audit-project-docs` 审计。
+`$project-doc-consistency check` 检查。
 
 规范命令直接调用的运行器、运行时或软件包也属于该 suite 的依赖。若项目声明和已有入口未提供该依赖，
 逐项确认它是项目管理的依赖、环境预置条件，还是应改用其他命令；不得一边记录依赖型命令，一边写

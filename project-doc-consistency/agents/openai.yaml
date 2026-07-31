@@ -1,0 +1,7 @@
+interface:
+  display_name: "项目文档一致性"
+  short_description: "按文档职责对照证据检查事实，并最小同步可直接证明内容正文"
+  default_prompt: "使用 $project-doc-consistency check 按文档职责只读检查当前项目事实；需要写入时明确改用 sync 做最小同步。"
+
+policy:
+  allow_implicit_invocation: false

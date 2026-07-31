@@ -3,6 +3,18 @@
 本仓库用于开发和验证个人 Skill。仓库中的 Skill 在完成结构校验、脚本测试和真实项目正向验证前，
 不应安装到个人 Skills 目录或用于批量修改项目。
 
+- [项目文档](docs/README.md)
+- [软件测试](SoftwareTesting/README.md)
+
+## 构建与交付
+
+本项目无独立构建步骤。
+
+交付产物为仓库中的两个 Skill 源码目录：
+
+- [`project-doc-skeleton`](project-doc-skeleton/)
+- [`project-doc-consistency`](project-doc-consistency/)
+
 ## project-doc-skeleton
 
 [`project-doc-skeleton`](project-doc-skeleton/SKILL.md) 的中文显示名为“项目文档骨架管理”。
@@ -19,8 +31,8 @@
 它不判断文档内容是否符合代码或产品行为。`CONTEXT.md` 是条件文件，并始终由
 `$grill-with-docs` 维护。
 
-该 Skill 只能显式调用。显式调用只开始只读调查和逐项确认，不自动授权修改、Git 操作、构建、测试或
-其他 Skill。
+该 Skill 只能显式调用。显式调用只开始只读调查和必要确认；互不依赖的未知项集中确认，存在冲突或依赖
+时再逐个澄清。它不自动授权修改、Git 操作、构建、测试或其他 Skill。
 
 ### 通用资产
 
@@ -44,25 +56,24 @@ project-doc-skeleton/
 生命周期、Registry 和归档结构；`test_doc_consistency_rules.py` 用隔离正反夹具验证门禁自身，
 不判断文档内容是否符合代码。
 
-## audit-project-docs
+## project-doc-consistency
 
-[`audit-project-docs`](audit-project-docs/SKILL.md) 的中文显示名为“项目文档内容审计”。
+[`project-doc-consistency`](project-doc-consistency/SKILL.md) 的中文显示名为“项目文档一致性”。
 
-它用于：
+它在同一套证据规则下提供两种显式模式：
 
-- 对照代码、配置、构建、测试和可观察行为审计文档事实；
-- 在标准或非标准文档结构中审计事实；
-- 发现过期、缺失、重复或互相冲突的声明；
-- 区分一致、不一致、无法验证、需要决策和未覆盖；
-- 在单独授权后只修正现有活动文档中的事实正文，不实施结构变化；
-- 将术语、`CONTEXT.md`、ADR 和语义取舍交给显式调用的 `$grill-with-docs`。
+- `check` 默认只读检查标准或非标准文档中的当前事实，先区分当前事实、决定、历史结果、状态和非穷举
+  摘要，再发现过期、缺失、重复或冲突声明；
+- `sync` 先执行相同检查，再在集中清单确认后按文档职责最小同步可直接证明的事实正文；
+- 两种模式都区分一致、不一致、无法验证、需要决策和未覆盖；
+- 两种模式都不实施结构变化，也不裁决术语、`CONTEXT.md`、ADR 或语义取舍。
 
-该 Skill 只能显式调用，默认只读。它不安装脚本、模板或持久化报告；修改文档和运行命令都需要独立确认。
+该 Skill 只能显式调用，未指定模式时默认 `check`。它不安装脚本、模板或持久化报告；文件修改和命令执行分别确认。
 
 目录保持最小：
 
 ```text
-audit-project-docs/
+project-doc-consistency/
 ├── SKILL.md
 └── agents/openai.yaml
 ```
@@ -79,14 +90,10 @@ audit-project-docs/
 - 验证了多上下文项目会停止，不会被压平成单一骨架；
 - 验证了非标准合成项目的内容审计、只修正已授权事实正文及拒绝越权结构修改；
 - 以多个既有项目做了严格只读审计或骨架复核，未修改这些仓库；
-- 验证了 `$audit-project-docs → $grill-with-docs → $project-doc-skeleton` 只能逐次显式调用，
+- 验证了 `$project-doc-consistency check → $grill-with-docs → $project-doc-skeleton` 只能逐次显式调用，
   且修改、机械复制、验证命令和 Git 授权不会继承；
 - 用负向确认包验证了依赖、工作目录和结果语义冲突会被逐项拦截。
 
-仍需扩大验证的范围：
-
-1. 不修改现有仓库这一前提下，尚未对大型非标准项目实施完整写入迁移；
-2. 当前仅在 Windows 与本机 Python 环境验证，尚未做 Linux/macOS 可移植性回归；
-3. 批量项目改造、无人监督运行和正式认证流程仍未验证。
+未完成的验证事项统一登记在[已知问题与待做需求](docs/已知问题与待做需求.md)。
 
 当前不会安装 Skill，也不会执行 commit、push 或 PR。
