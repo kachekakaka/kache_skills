@@ -1,0 +1,7 @@
+interface:
+  display_name: "项目文档骨架管理"
+  short_description: "逐项确认后建立、迁移并机械检查单一上下文项目的文档骨架"
+  default_prompt: "使用 $project-doc-skeleton 只读检查当前项目，并在逐项确认后建立或优化文档骨架。"
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "项目文档内容审计"
+  short_description: "对照代码、配置、构建和测试证据审计项目文档的当前事实"
+  default_prompt: "使用 $audit-project-docs 对照当前项目证据审计文档内容，并先报告问题而不修改文件。"
+
+policy:
+  allow_implicit_invocation: false
