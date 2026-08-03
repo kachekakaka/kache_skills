@@ -1,7 +1,7 @@
 interface:
-  display_name: "项目文档骨架管理"
-  short_description: "集中确认独立事项后建立、迁移并机械检查长期文档骨架"
-  default_prompt: "使用 $project-doc-skeleton 只读检查当前项目，集中确认互不依赖的事项，并在最终清单获批后建立或优化文档骨架。"
+  display_name: "项目文档骨架与结构治理"
+  short_description: "完整检查文档结构，保存方案后再实施标准骨架或等价治理"
+  default_prompt: "使用 $project-doc-skeleton 完整检查项目文档结构；先报告并询问是否保存方案，只有再次明确授权后才按方案施工。"
 
 policy:
   allow_implicit_invocation: false

@@ -6,3 +6,4 @@
 - [测试安全](SAFETY.md)
 - [活动测试项 Registry](../docs/软件测试.md)
 - [文档机械门禁](doc_consistency/README.md)
+- [项目文档 Skill 前向试用](manual/project_doc_skills/README.md)：`explicit` 协议，仍待 consistency 独立阶段收敛
