@@ -1,7 +1,7 @@
 interface:
-  display_name: "项目文档一致性"
-  short_description: "核对治理、文档事实与测试设计，并最小同步内容"
-  default_prompt: "使用 $project-doc-consistency check 严格按入口冻结、治理短路、内容冻结、单次取证与收尾四阶段执行；需要修订现有文档时显式使用 sync。"
+  display_name: "项目文档一致性检查与方案"
+  short_description: "核对活动文档事实并保存可独立实施与关闭的方案"
+  default_prompt: "使用 $project-doc-consistency 检查活动文档与当前事实；先报告，得到明确授权后只保存一份可交接方案并停止。"
 
 policy:
   allow_implicit_invocation: false

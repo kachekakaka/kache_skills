@@ -1,9 +1,9 @@
 # 骨架 Skill 职责收缩施工方案
 
-- 待办：[`DOC-SKELETON-RESPONSIBILITY-REFACTOR`](../已知问题与待做需求.md#doc-skeleton-responsibility-refactor收缩骨架-skill-职责并实施第一阶段)
-- 状态：实施中
+- 原待办：`DOC-SKELETON-RESPONSIBILITY-REFACTOR`（已退出活动列表）
+- 状态：已完成
 - 性质：由原职责收缩总待办拆出的 skeleton 独立施工方案
-- 决策依据：[ADR-0003](../adr/0003-separate-structure-governance-from-content-consistency.md)、[ADR-0004](../adr/0004-separate-review-plan-and-construction.md) 与 [`CONTEXT.md`](../../CONTEXT.md)
+- 决策依据：[ADR-0003](../../docs/adr/0003-separate-structure-governance-from-content-consistency.md)、[ADR-0004](../../docs/adr/0004-separate-review-plan-and-construction.md) 与 [`CONTEXT.md`](../../CONTEXT.md)
 
 ## 拆分结论
 
@@ -115,6 +115,15 @@
 原验证写成通过。
 
 明确不运行 `T-PROJECT-DOC-FORWARD`、全量测试、正式认证、真实数据或产品进程操作。
+
+## 验证记录
+
+- `project-doc-skeleton` Skill 结构校验通过。
+- T-DOC 规则夹具 27 项通过，本仓库施工候选 T-DOC 通过且为 0 warning。
+- 仓库 T-DOC 与 skeleton 携带的两份 Python 资产逐字节一致。
+- 差异格式与修改范围 review 未发现阻断问题；consistency 四个实现文件在 skeleton 施工前后哈希一致。
+- `T-PROJECT-DOC-FORWARD`、全量测试和正式认证均为 `not_run`。
+- 生命周期退出后的最终状态 T-DOC 按关闭顺序在本方案归档后执行，其结果不回写本历史候选。
 
 ## 完成条件与停点
 
