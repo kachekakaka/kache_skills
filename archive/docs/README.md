@@ -7,4 +7,6 @@
 | [骨架 Skill 职责收缩施工方案](2026-08-03-DOC-SKELETON-RESPONSIBILITY-REFACTOR-骨架职责收缩施工.md) | 记录 skeleton 第一阶段的职责收缩决定、施工边界和验收前验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [一致性 Skill 职责收缩施工方案](2026-08-03-DOC-CONSISTENCY-RESPONSIBILITY-REFACTOR-一致性职责收缩施工.md) | 记录 consistency 的职责收缩、三阶段授权、收尾字段和验收前验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [骨架 Skill 授权流程收敛方案](2026-08-03-SKELETON-AUTH-FLOW-20260803-骨架Skill授权流程收敛方案.md) | 记录 skeleton 的合并授权申请、同任务授权差额、条件关闭和项目级收尾契约 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
-| [骨架 Skill 独立验收差额收敛方案](2026-08-04-SKELETON-ACCEPTANCE-DELTAS-20260804-骨架Skill独立验收差额收敛方案.md) | 记录四项独立验收差额的已施工但未验证候选，以及被后续职责收缩方案替代的退出结果 | [骨架 Skill 仅检查与落方案职责收缩方案](../../docs/方案/SKELETON-PLAN-ONLY-20260804-骨架Skill仅检查与落方案职责收缩方案.md) |
+| [骨架 Skill 独立验收差额收敛方案](2026-08-04-SKELETON-ACCEPTANCE-DELTAS-20260804-骨架Skill独立验收差额收敛方案.md) | 记录四项独立验收差额的已施工但未验证候选，以及被后续职责收缩方案替代的退出结果 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [骨架 Skill 仅检查与落方案职责收缩方案](2026-08-04-SKELETON-PLAN-ONLY-20260804-骨架Skill仅检查与落方案职责收缩方案.md) | 记录 skeleton 退出施工执行链、普通验证、独立验收与生命周期关闭 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [一致性 Skill 仅检查与落方案职责收缩方案](2026-08-04-CONSISTENCY-PLAN-ONLY-20260804-审计Skill仅检查与落方案职责收缩方案.md) | 记录 consistency 退出施工执行链、目标授权交接、普通验证、独立验收、联合复核与生命周期关闭 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
