@@ -231,6 +231,45 @@ class DocConsistencyRulesTest(unittest.TestCase):
         self.assert_has(errors, "docs/需求文档.md: 活动 Markdown 和归档索引必须使用 LF")
         self.assert_has(errors, "docs/设计文档.md: 必须是有效 UTF-8")
 
+    def test_project_skill_assets_are_excluded_without_broadening_scope(self) -> None:
+        skill_roots = (
+            ".agents/skills",
+            ".claude/skills",
+            ".codex/skills",
+            ".cursor/skills",
+            ".github/skills",
+            ".opencode/skill",
+            ".opencode/skills",
+            "packages/example/.cursor/skills",
+        )
+        for index, root in enumerate(skill_roots):
+            skill = self.root / root / f"example-{index}" / "SKILL.md"
+            skill.parent.mkdir(parents=True, exist_ok=True)
+            skill.write_bytes(
+                b"# Project skill\r\n\r\n[missing](missing.md)\r\n"
+                b"C:\\Users\\example\\private\r\n"
+            )
+            self.write(f"{root}/example-{index}/CONTEXT.md", "# Skill context\n")
+
+        self.assert_clean()
+
+        adjacent_paths = (
+            ".agents/notes.md",
+            ".claude/notes.md",
+            ".codex/notes.md",
+            ".cursor/notes.md",
+            ".github/notes.md",
+            ".opencode/notes.md",
+        )
+        for relative in adjacent_paths:
+            self.write(relative, "# Notes\n\n[missing](missing.md)\n")
+        self.write("tooling/SKILL.md", "# Tool source\n\n[missing](missing.md)\n")
+
+        errors, _ = self.issues()
+        for relative in adjacent_paths:
+            self.assert_has(errors, f"{relative}: 链接目标不存在: missing.md")
+        self.assert_has(errors, "tooling/SKILL.md: 链接目标不存在: missing.md")
+
     def test_local_link_and_heading_anchor_are_checked(self) -> None:
         self.write(
             "docs/需求文档.md",

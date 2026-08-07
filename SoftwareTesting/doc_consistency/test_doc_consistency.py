@@ -26,6 +26,17 @@ IGNORED_PARTS = {
     "node_modules",
     "venv",
 }
+PROJECT_SKILL_ROOTS = frozenset(
+    {
+        (".agents", "skills"),
+        (".claude", "skills"),
+        (".codex", "skills"),
+        (".cursor", "skills"),
+        (".github", "skills"),
+        (".opencode", "skill"),
+        (".opencode", "skills"),
+    }
+)
 REQUIRED_FILES = (
     "AGENTS.md",
     "README.md",
@@ -96,12 +107,25 @@ ABSOLUTE_USER_PATH_RE = re.compile(
 )
 
 
+def _is_project_skill_asset(path: Path, root: Path) -> bool:
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        return False
+    return any(
+        parts[index : index + 2] in PROJECT_SKILL_ROOTS
+        for index in range(len(parts) - 1)
+    )
+
+
 def _ignored(path: Path, root: Path) -> bool:
     try:
         relative = path.relative_to(root)
     except ValueError:
         return True
-    return any(part in IGNORED_PARTS for part in relative.parts)
+    return _is_project_skill_asset(path, root) or any(
+        part in IGNORED_PARTS for part in relative.parts
+    )
 
 
 def _is_archive(path: Path, root: Path) -> bool:
