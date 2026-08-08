@@ -1,125 +1,29 @@
 # kache_skills
 
-本仓库用于开发和验证两个相互独立的项目文档 Skill。`project-doc-skeleton` 与 `project-doc-consistency` 均已完成
-“只检查与落方案”的职责收缩，当前能力以各自 `SKILL.md` 和项目文档为准；历史施工、验证与验收结果由归档方案
-承接，其他未完成事项继续以活动待办为准。
+本仓库开发和验证两个只能显式调用、运行时互不依赖的项目文档 Skill：
 
-- [项目文档](docs/README.md)
-- [软件测试](SoftwareTesting/README.md)
+- [`project-doc-skeleton`](project-doc-skeleton/SKILL.md)：只读检查项目文档骨架、生命周期、测试治理和机械门禁；用户
+  明确要求时只保存方案，后续由普通任务实施。
+- [`project-doc-consistency`](project-doc-consistency/SKILL.md)：只读核对活动文档与当前事实；用户明确要求时只保存
+  自包含方案，后续由普通任务实施。
+
+当前长期说明从[项目文档](docs/README.md)进入，验证入口见[软件测试](SoftwareTesting/README.md)。
 
 ## 构建与交付
 
-本项目无独立构建步骤。
+本项目无独立构建步骤。交付产物为 `project-doc-skeleton/` 与 `project-doc-consistency/` 两个目录；Skill 安装、
+commit、push、PR 和发布仍需分别取得明确授权。
 
-交付产物为：
+标准骨架路线的 T-DOC 从 `project-doc-skeleton/assets/SoftwareTesting/doc_consistency/` 整文件交付并逐字节比较：
 
-- [`project-doc-skeleton`](project-doc-skeleton/)
-- [`project-doc-consistency`](project-doc-consistency/)
-
-本地文件读取、搜索和只读 Git 查询默认允许，命令按实际副作用分类。公开、无需认证、纯读取、不上传本地或
-非公开内容、不收费且不改变外部状态的联网也默认允许。用户明确授权按已确认方案实施时，该次授权覆盖确定范围
-内的文件变更、方案列明的普通验证、普通下载与公开资源获取、结果记录，以及完成条件满足后的方案关闭和精确
-任务清理；范围升级、新增副作用、候选实质漂移或新的语义决定只申请授权差额。commit、push、PR、发布、安装、
-认证或私有访问、上传、外部写入、付费或明显大规模联网、破坏工作区或改写历史的 Git 操作仍须明确授权；未列明
-或高风险删除也须精确授权。方案关闭与 Git 交付相互独立。
-
-## project-doc-skeleton
-
-[`project-doc-skeleton`](project-doc-skeleton/SKILL.md) 的中文显示名为“项目文档骨架检查与方案”。它只能显式调用：
-
-- 开始处理一个新骨架问题且尚无对应活动方案时始终只读检查，即使请求包含修复或 `apply`；首次检查完整覆盖
-  全部适用结构维度，不在首个缺口短路；
-- 先冻结有限的结构维度和本轮文件集合，再在范围内充分读取，不限制为标题、链接 token 或固定行数；
-- 检查和保存方案都物化已经填充的覆盖／残余矩阵；结论只限本次冻结范围，不用结构门禁代替内容或测试覆盖；
-- 检查结束只报告结构结论并询问是否保存方案；用户明确保存后形成并静态自审一份 `待确认` 方案，然后停止；
-- 不提供 `apply`、施工、验证、重试或生命周期关闭能力；已有活动方案时默认交给普通实施任务，只有明确授权
-  “仅修订方案”时才修改方案本身；
-- 标准路线为新项目或明确迁移规划固定主干和条件模块；成熟既有结构按职责和必要安全结果证明等价后保留原
-  路径、Registry schema、类别词汇和项目专用门禁，不因存在文档或测试目录加载标准路线参考；
-- 只检查文件、目录、入口、导航、职责归属、生命周期、测试治理结构、适用测试资产信息架构和机械门禁；集中测试
-  治理根列完整路径，模块内测试根只核对边界与映射，未被入口或所有者承接的顶层测试目录成为待裁决候选；具体
-  目标和例外写入项目方案，不同步产品事实、审计测试设计经济性或执行全项目安全认证；
-- 七类标准项目级 Agent Skill 根，以及由用户、适用项目规则或冻结范围内精确配置声明的其他 Skill 根，默认不纳入
-  活动文档、导航、历史分类或矩阵；只有精确结构声明需要时才读取必要文件作为一轮实现证据，不为发现自定义根
-  扫描配置，也不宽泛忽略整个工具目录或其他位置的 `SKILL.md`；
-- 保存的方案必须区分证据、决定、确定与可能路径、完成条件和结果，并实例化项目级收尾字段，使普通任务能够
-  独立施工、验收并退出活动生命周期；
-- 普通任务取得“按已确认方案实施”的明确授权后，可在同一实施批次完成确定文件变更、方案列明的普通验证、
-  结果记录和满足条件后的生命周期关闭；方案列明的仓库内精确删除和任务临时产物清理包含在其中，新增副作用、
-  高风险动作或实质漂移只申请差额，这不恢复 skeleton 的执行阶段；
-- 保存授权只覆盖方案及必要待办，不授权目标文件施工、非只读 Git、安装、认证或私有联网、上传、外部写入、
-  付费或明显大规模联网、产品进程、真实数据、高风险删除或关闭；
-- 符合共同规则的公开只读联网默认允许，但 skeleton 只在用户指定或已冻结结构声明直接需要公开证据时使用，
-  不以外部资料替代项目当前证据，也不调用或依赖另一个 Skill。
-
-### 标准路线通用资产
-
-```text
-project-doc-skeleton/
-├── SKILL.md
-├── agents/openai.yaml
-├── references/
-│   ├── skeleton-rules.md
-│   └── testing-baseline.md
-└── assets/SoftwareTesting/doc_consistency/
-    ├── test_doc_consistency.py
-    └── test_doc_consistency_rules.py
-```
-
-通用 T-DOC 只在标准骨架路线从 Skill 资产整文件逐字节安装并比较结果；不预设永久复制 helper，不能保证整文件
-复制时停止，不以片段补丁替代。已证明等价的成熟项目保留项目专用门禁，不安装、不覆盖也不要求改名为 T-DOC。
-
-`test_doc_consistency.py` 只检查标准路径、入口、链接、生命周期、四列 Registry 和归档关系；“待确认”待办可选
-一份方案，“实施中”待办必须一份，其他状态禁用方案。标准项目级 Skill 根精确排除于通用 Markdown 输入，相邻
-工具目录内容和其他位置的 `SKILL.md` 仍受原规则约束；自定义 Skill 根不由通用门禁解析。
-`test_doc_consistency_rules.py` 用隔离正反夹具验证门禁自身。两者都不判断正文事实或成熟既有治理是否等价。
-
-## project-doc-consistency
-
-[`project-doc-consistency`](project-doc-consistency/SKILL.md) 的中文显示名为“项目文档一致性检查与方案”。它也只能显式调用：
-
-本节记录当前已交付能力；历史施工、验证、验收与关闭结果由[文档归档](archive/docs/README.md)承接。
-
-- 新问题始终只读检查；检查后询问是否保存，明确保存后写入并静态自审一份主责方案，然后停止；
-- 只读取足以识别活动真源所有者的入口与职责声明，不重新认证标准骨架或六项治理；所有权不清时停止并形成
-  skeleton 交接；
-- 未限定项目文档范围时默认 `full`；明确文件、功能、声明或差异时使用 `incremental`，只展开一轮直接依赖，
-  无法形成可靠边界时询问是否升级；
-- 对冻结范围分别完成事实／契约遍和职责／删除优先遍，并以已填写的覆盖／残余矩阵证明每份活动文档或增量种子
-  的实际覆盖，不能用“已完整读取”替代审计；
-- 测试、CI 与安全实现只在它们是当前声明的直接证据，或用户明确要求测试设计审计时进入范围；显式的测试体系、
-  全部 Registry 或全局覆盖请求使用有边界的 Registry 全局模式，普通 `full` 不自动触发；
-- 标准项目级 Agent Skill 根及项目明确声明的 Skill 根默认不是活动项目文档，只能在精确声明需要时作为一轮实现
-  证据，或由显式 Skill 专项任务审查；
-- 符合共同规则的公开只读联网只在用户指定或已冻结声明直接需要公开证据时使用，不进行无边界浏览，也不让公开
-  资料覆盖目标项目自己的当前契约；
-- 保存的一份主责方案必须自包含任务特定活动真源、范围、已填矩阵、决定、路径、切片就绪证据、验证、可预见副作用
-  处理与授权边界；同一审计目标中已经通过就绪检查的文档、结构、产品、构建、测试、CI 和安全切片可以统一进入
-  确定范围，不预写脚本或不必要的精确命令；副作用边界依赖调用方式时记录必要参数；
-- 不提供 `sync`、施工、验证或关闭能力；已有活动方案时默认由普通任务接手，只有明确授权“仅修订方案”时才
-  修改方案本身；
-- 普通任务遵守目标项目的实施授权语义；标准授权规则把确定文件变更、方案列明的普通验证、结果记录和满足条件
-  后的关闭合并授权，目标规则更严格时保持更严格边界，不因此恢复 consistency 的执行阶段；
-- 普通任务只凭目标项目、方案和实施授权即可完成全部确定切片、列明验证，并执行最终范围与漂移复核：确认最终
-  入口和所有者、确定切片、已列直接消费者及修改路径新产生的一跳直接链接／消费者；不重跑完整审计。满足条件后
-  关闭，无需再次调用审计或另起方案；未收敛候选仍留在同一方案待决。
-
-目录保持最小：
-
-```text
-project-doc-consistency/
-├── SKILL.md
-├── agents/openai.yaml
-└── references/
-    └── test-design-audit.md
-```
+- [suite 说明](project-doc-skeleton/assets/SoftwareTesting/doc_consistency/README.md)
+- [文档机械门禁](project-doc-skeleton/assets/SoftwareTesting/doc_consistency/test_doc_consistency.py)
+- [门禁规则夹具](project-doc-skeleton/assets/SoftwareTesting/doc_consistency/test_doc_consistency_rules.py)
 
 ## 验证入口
 
-- [文档机械门禁](SoftwareTesting/doc_consistency/README.md)：验证本仓库当前标准骨架及通用 T-DOC 规则夹具。
-- [项目文档 Skill 前向试用](SoftwareTesting/manual/project_doc_skills/README.md)：除两个 Skill 的职责、阶段和范围外，
-  还验证 Skeleton 测试资产信息架构调查、一份 consistency 自包含方案由全新普通任务独立实施／复核／关闭，
-  成熟项目不误加载标准路线参考，以及项目级 Skill 资产隔离；属于 `explicit`，不在普通门禁中执行。
-- 动态结果、运行时间和临时候选状态不保存在本 README；每次任务按实际执行结果交接。
+- [T-DOC](SoftwareTesting/doc_consistency/README.md)：验证标准骨架、活动入口、生命周期、归档和顶层 Markdown 根所有权。
+- [项目文档 Skill 前向试用](SoftwareTesting/manual/project_doc_skills/README.md)：`explicit` 协议，不在普通验证中自动执行。
 
-未完成验证统一登记在[已知问题与待做需求](docs/已知问题与待做需求.md)。
+未完成事项统一登记在[已知问题与待做需求](docs/已知问题与待做需求.md)，历史实施和验证结果从
+[文档归档](archive/docs/README.md)进入。

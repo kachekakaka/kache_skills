@@ -270,6 +270,22 @@ class DocConsistencyRulesTest(unittest.TestCase):
             self.assert_has(errors, f"{relative}: 链接目标不存在: missing.md")
         self.assert_has(errors, "tooling/SKILL.md: 链接目标不存在: missing.md")
 
+    def test_top_level_markdown_root_requires_direct_owner(self) -> None:
+        self.write("handbook/README.md", "# 项目手册\n")
+
+        errors, _ = self.issues()
+        self.assert_has(
+            errors,
+            "handbook/: 含活动 Markdown 的顶层目录必须由 README.md、docs/README.md "
+            "或 SoftwareTesting/README.md 直接链接目录内 Markdown 所有者入口",
+        )
+
+        self.write(
+            "README.md",
+            self.read("README.md") + "\n- [项目手册](handbook/README.md)\n",
+        )
+        self.assert_clean()
+
     def test_local_link_and_heading_anchor_are_checked(self) -> None:
         self.write(
             "docs/需求文档.md",

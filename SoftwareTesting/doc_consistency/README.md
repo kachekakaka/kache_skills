@@ -25,7 +25,7 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py
 
 ## 断言
 
-门禁机械检查标准骨架的固定路径与大小写、UTF-8 与 LF、普通相对链接和标题锚点、必要入口、两跳可达性、待办与方案生命周期、四列测试 Registry 及归档登记。任意层级的 `.agents/skills/**`、`.cursor/skills/**`、`.claude/skills/**`、`.codex/skills/**`、`.opencode/skills/**`、`.opencode/skill/**` 和 `.github/skills/**` 不接受这些通用 Markdown 检查；相邻工具目录内容和其他位置的 `SKILL.md` 仍按原规则检查。`待确认` 待办可以没有方案或链接一份方案，`实施中` 待办必须链接一份方案，其他活动状态不得保留方案；任一待办最多一份。根 README 与 `docs/README.md` 直接链接至少三份相同专题 Markdown 时给出重复导航 warning。它不解析工具配置或自定义 Skill 根，也不判断正文事实、生命周期语义、测试设计质量、Skill 正文质量或非标准成熟项目是否结构等价。
+门禁机械检查标准骨架的固定路径与大小写、UTF-8 与 LF、普通相对链接和标题锚点、必要入口、两跳可达性、待办与方案生命周期、四列测试 Registry 及归档登记。标准根、归档和已排除路径之外，含活动 Markdown 的顶层目录必须由根 README、项目文档入口或测试总入口直接链接目录内的 Markdown 所有者入口。任意层级的 `.agents/skills/**`、`.cursor/skills/**`、`.claude/skills/**`、`.codex/skills/**`、`.opencode/skills/**`、`.opencode/skill/**` 和 `.github/skills/**` 不接受这些通用 Markdown 检查；相邻工具目录内容和其他位置的 `SKILL.md` 仍按原规则检查。`待确认` 待办可以没有方案或链接一份方案，`实施中` 待办必须链接一份方案，其他活动状态不得保留方案；任一待办最多一份。根 README 与 `docs/README.md` 直接链接至少三份相同专题 Markdown 时给出重复导航 warning。它不解析工具配置或自定义 Skill 根，也不判断正文事实、生命周期语义、测试设计质量、Skill 正文质量或非标准成熟项目是否结构等价。
 
 ## 结果语义
 

@@ -75,6 +75,12 @@ REQUIRED_NAVIGATION = {
         ("SoftwareTesting/doc_consistency/README.md", None),
     ),
 }
+TOP_LEVEL_OWNER_FILES = (
+    "README.md",
+    "docs/README.md",
+    "SoftwareTesting/README.md",
+)
+STANDARD_TOP_LEVEL_ROOTS = frozenset({"SoftwareTesting", "archive", "docs"})
 MACHINE_FILES = (
     "AGENTS.md",
     "README.md",
@@ -425,6 +431,37 @@ def _check_docs_reachability(root: Path, errors: list[str]) -> None:
                 f"{path.relative_to(root).as_posix()}: "
                 "活动文档不能从 docs/README.md 通过两次实际 Markdown 链接到达"
             )
+
+
+def _check_top_level_markdown_ownership(root: Path, errors: list[str]) -> None:
+    candidates = sorted(
+        {
+            path.relative_to(root).parts[0]
+            for path in _active_markdown(root)
+            if len(path.relative_to(root).parts) > 1
+            and path.relative_to(root).parts[0] not in STANDARD_TOP_LEVEL_ROOTS
+        }
+    )
+    owner_targets: set[Path] = set()
+    for relative in TOP_LEVEL_OWNER_FILES:
+        owner = root / relative
+        content = _read_text(owner)
+        if content is None:
+            continue
+        owner_targets.update(
+            target.resolve(strict=False)
+            for _, target, _ in _local_links(content, owner)
+            if target.is_file() and target.suffix.lower() == ".md"
+        )
+
+    for name in candidates:
+        candidate = root / name
+        if any(_is_within(target, candidate) for target in owner_targets):
+            continue
+        errors.append(
+            f"{name}/: 含活动 Markdown 的顶层目录必须由 README.md、"
+            "docs/README.md 或 SoftwareTesting/README.md 直接链接目录内 Markdown 所有者入口"
+        )
 
 
 def _suite_readmes(root: Path) -> list[Path]:
@@ -912,6 +949,7 @@ def collect_doc_consistency(
     _check_markdown_files(workspace, errors)
     _check_navigation(workspace, errors)
     _check_docs_reachability(workspace, errors)
+    _check_top_level_markdown_ownership(workspace, errors)
     _check_suite_navigation(workspace, errors)
     backlog, backlog_plan_targets = _parse_backlog(workspace, errors)
     _check_plans(workspace, backlog, backlog_plan_targets, errors)

@@ -14,3 +14,22 @@
 | [文档审计覆盖、单方案实施、范围隔离与独立复核改进方案](2026-08-07-DOC-AUDIT-COVERAGE-20260807-文档审计覆盖与独立复核改进方案.md) | 记录双遍审计、Registry 全局模式、自包含综合方案、发现集外复核和项目级 Skill 资产隔离的实施与五样本前向验收 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [测试资产结构审查与项目级 Skill 范围排除改进方案](2026-08-07-SKELETON-TEST-ASSET-IA-20260807-测试资产结构审查与项目级Skill范围排除改进方案.md) | 记录测试资产信息架构调查、七类标准项目级 Skill 根精确隔离、T-DOC 机械夹具和五样本前向验收 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [项目文档 Skill 瘦身与最终复核边界修订方案](2026-08-07-PROJECT-DOC-SKILL-SLIM-20260807-项目文档Skill瘦身与最终复核边界修订方案.md) | 记录条件参考加载、运行时删重、验证副作用方案化和最终范围与漂移复核收窄的实施与五样本验收 | [项目文档 Skill](../../README.md) |
+| [项目文档 Skill 前向试用与 F2 对照](其他项目的工作记录/2026-08-01_项目文档Skill前向试用与F2对照.md) | 记录四项目双 Skill 前向试用、F2 对照和改进建议 | [项目文档 Skill 前向试用](../../SoftwareTesting/manual/project_doc_skills/README.md) |
+| [上传器项目双 Skill 前向试用](其他项目的工作记录/bili_uploader_workspace/2026-08-01-project-doc-skills-forward-check.md) | 记录上传器项目双 Skill 只读前向试用结果 | [项目文档 Skill 前向试用](../../SoftwareTesting/manual/project_doc_skills/README.md) |
+| [上传器兼容桥原型报告](其他项目的工作记录/bili_uploader_workspace/P0_BILIUP_BRIDGE_PROTOTYPE.md) | 记录外部上传器兼容桥原型、边界和阻断项 | 无，仅保留历史证据 |
+| [上传器上游 CLI 契约审查](其他项目的工作记录/bili_uploader_workspace/P0_UPSTREAM_CONTRACT_REVIEW.md) | 记录外部上传器上游 CLI 契约缺口和 P0 取舍 | 无，仅保留历史证据 |
+| [上传器项目一致性工作记录](其他项目的工作记录/bili_uploader_workspace/PROJECT_DOC_CONSISTENCY_WORKLOG.md) | 记录上传器项目一致性审计、同步和改进建议 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
+| [上传器项目骨架工作记录](其他项目的工作记录/bili_uploader_workspace/PROJECT_DOC_SKELETON_WORKLOG.md) | 记录上传器项目骨架迁移、验证和改进建议 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [bili 项目骨架与一致性审计 Skill 工作记录](其他项目的工作记录/bili_workspace/2026-07-31_项目文档骨架与一致性审计Skill工作记录.md) | 记录 bili 项目双 Skill 首次执行、修复、验证和改进建议 | [项目文档 Skill 前向试用](../../SoftwareTesting/manual/project_doc_skills/README.md) |
+| [bili 项目双 Skill 前向试用](其他项目的工作记录/bili_workspace/2026-08-01-project-doc-skills-forward-check.md) | 记录 bili 项目双 Skill 只读前向试用结果 | [项目文档 Skill 前向试用](../../SoftwareTesting/manual/project_doc_skills/README.md) |
+| [bili 项目文档生命周期实施工作记录](其他项目的工作记录/bili_workspace/2026-08-04-DOC-LIFECYCLE-20260804-文档生命周期实施工作记录.md) | 记录 bili 项目文档生命周期方案实施和 T-DOC 验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [抖音录制项目一致性工作记录](其他项目的工作记录/douyin_recorder_workspace/2026-07-31-project-doc-consistency-worklog.md) | 记录抖音录制项目一致性审计、同步和改进建议 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
+| [抖音录制项目骨架工作记录](其他项目的工作记录/douyin_recorder_workspace/2026-07-31-project-doc-skeleton-worklog.md) | 记录抖音录制项目骨架迁移、验证和改进建议 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [抖音录制项目双 Skill 前向试用](其他项目的工作记录/douyin_recorder_workspace/2026-08-01-project-doc-skills-forward-check.md) | 记录抖音录制项目双 Skill 只读前向试用结果 | [项目文档 Skill 前向试用](../../SoftwareTesting/manual/project_doc_skills/README.md) |
+| [抖音录制项目历史工作记录旧索引](其他项目的工作记录/douyin_recorder_workspace/README.md) | 记录抖音录制项目两份历史工作记录的旧子索引 | 无，仅保留历史证据 |
+| [HG 项目一致性全量同步工作记录](其他项目的工作记录/hg_workspace/2026-07-31-hg-workspace-project-doc-consistency.md) | 记录 HG 项目一致性全量审计、同步和改进建议 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
+| [HG 项目骨架迁移工作记录](其他项目的工作记录/hg_workspace/2026-07-31-hg-workspace-project-doc-skeleton.md) | 记录 HG 项目骨架迁移、验证和改进建议 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [HG 项目双 Skill 前向试用](其他项目的工作记录/hg_workspace/2026-08-01-project-doc-skills-forward-check.md) | 记录 HG 项目双 Skill 只读前向试用结果 | [项目文档 Skill 前向试用](../../SoftwareTesting/manual/project_doc_skills/README.md) |
+| [HG 项目历史工作记录旧索引](其他项目的工作记录/hg_workspace/README.md) | 记录 HG 项目两份历史工作记录的旧子索引 | 无，仅保留历史证据 |
+| [当前项目骨架残余收口方案](2026-08-08-DOC-SKELETON-RESIDUAL-20260808-当前项目骨架残余收口方案.md) | 记录外部项目历史归档、根入口收缩、三份 T-DOC 资产和顶层 Markdown 根所有权门禁的实施与普通验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [T-DOC 入口契约与安装漂移收口方案](DOC-TDOC-ENTRY-CONTRACT-20260808-T-DOC入口契约与安装漂移收口方案.md) | 记录 T-DOC 标准 Skill 根边界的一处设计事实修订、范围收缩 review 和普通验证 | [设计文档](../../docs/设计文档.md) |

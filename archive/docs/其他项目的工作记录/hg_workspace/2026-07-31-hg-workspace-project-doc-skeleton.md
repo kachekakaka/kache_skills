@@ -2,7 +2,7 @@
 
 ## 记录说明
 
-本文件是在任务完成后应用户明确要求形成的历史工作记录，不是 `project-doc-skeleton` 的默认持久化输出。记录用于后续优化 Skill，当前规则仍以 [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) 及其 references 为准。
+本文件是在任务完成后应用户明确要求形成的历史工作记录，不是 `project-doc-skeleton` 的默认持久化输出。记录用于后续优化 Skill，当前规则仍以 [project-doc-skeleton](../../../../project-doc-skeleton/SKILL.md) 及其 references 为准。
 
 ## 基本信息
 
