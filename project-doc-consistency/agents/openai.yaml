@@ -1,7 +1,7 @@
 interface:
   display_name: "项目文档一致性检查与方案"
   short_description: "核对活动文档事实并保存可独立实施与关闭的方案"
-  default_prompt: "使用 $project-doc-consistency 检查活动文档与当前事实；先报告，得到明确授权后只保存一份可交接方案并停止。"
+  default_prompt: "使用 $project-doc-consistency 检查活动文档与当前事实；先取得评审轮数，完成只读审计、未保存方案候选评审和冻结发现集合对账，最后询问是否保存并停止。"
 
 policy:
   allow_implicit_invocation: false

@@ -33,3 +33,5 @@
 | [HG 项目历史工作记录旧索引](其他项目的工作记录/hg_workspace/README.md) | 记录 HG 项目两份历史工作记录的旧子索引 | 无，仅保留历史证据 |
 | [当前项目骨架残余收口方案](2026-08-08-DOC-SKELETON-RESIDUAL-20260808-当前项目骨架残余收口方案.md) | 记录外部项目历史归档、根入口收缩、三份 T-DOC 资产和顶层 Markdown 根所有权门禁的实施与普通验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [T-DOC 入口契约与安装漂移收口方案](DOC-TDOC-ENTRY-CONTRACT-20260808-T-DOC入口契约与安装漂移收口方案.md) | 记录 T-DOC 标准 Skill 根边界的一处设计事实修订、范围收缩 review 和普通验证 | [设计文档](../../docs/设计文档.md) |
+| [方案候选评审与保存停点实施方案](2026-08-08-PROJECT-DOC-PLAN-REVIEW-20260808-方案候选评审与保存停点实施方案.md) | 记录两个项目文档 Skill 的用户选定评审轮数、调用内自修订、冻结发现集合对账、最终保存确认及五样本前向验证 | [ADR-0009](../../docs/adr/0009-review-plan-candidate-before-saving.md) |
+| [Python 文本验证运行编码方案](2026-08-09-SKELETON-PYTHON-UTF8-VALIDATION-20260809-Python文本验证运行编码方案.md) | 记录 skeleton 新规划 Python 文本验证入口的显式 UTF-8 就绪约束、严格失败语义及普通验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
