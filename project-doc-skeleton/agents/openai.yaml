@@ -1,7 +1,7 @@
 interface:
   display_name: "项目文档骨架检查与方案"
   short_description: "完整检查项目文档结构并保存可独立实施与关闭的方案"
-  default_prompt: "使用 $project-doc-skeleton 检查当前项目文档骨架；先取得评审轮数，完成只读检查、未保存方案候选评审和冻结发现集合对账，最后询问是否保存并停止。"
+  default_prompt: "使用 $project-doc-skeleton 检查当前项目文档骨架；先用白话询问‘交付方案前需要我自查几遍’并接受‘按推荐’为两遍，只读检查并评审候选；权威已定的冲突作为修复项，项目要求保留现有路径时不再询问迁移，测试资产的长期所有者与完整检查范围分别裁决，真正需要拍板时让卡片正文避开字段、路径和工具术语并提供‘按推荐’，最后询问是否‘只保存方案，不开始实施’并停止。"
 
 policy:
   allow_implicit_invocation: false
