@@ -36,3 +36,6 @@
 | [方案候选评审与保存停点实施方案](2026-08-08-PROJECT-DOC-PLAN-REVIEW-20260808-方案候选评审与保存停点实施方案.md) | 记录两个项目文档 Skill 的用户选定评审轮数、调用内自修订、冻结发现集合对账、最终保存确认及五样本前向验证 | [ADR-0009](../../docs/adr/0009-review-plan-candidate-before-saving.md) |
 | [Python 文本验证运行编码方案](2026-08-09-SKELETON-PYTHON-UTF8-VALIDATION-20260809-Python文本验证运行编码方案.md) | 记录 skeleton 新规划 Python 文本验证入口的显式 UTF-8 就绪约束、严格失败语义及普通验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [用户拍板交互白话化与决策门槛收口方案](2026-08-09-PROJECT-DOC-DECISION-UX-20260809-用户拍板交互白话化与决策门槛收口方案.md) | 记录两个项目文档 Skill 的白话决策卡、证据裁决门槛、短回复协议及五样本迭代验收 | [项目术语](../../CONTEXT.md) |
+| [F2 project-doc-skeleton 改进建议报告](F2-DOC-SKELETON-01-project-doc-skeleton改进建议-20260810.md) | 记录外部 F2 项目测试资产骨架治理后的可迁移经验与通用 Skill 改进建议 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
+| [F2 project-doc-consistency 改进建议报告](F2-DOC-CONSISTENCY-01-project-doc-consistency改进建议-20260810.md) | 记录外部 F2 项目文档与验证身份治理后的可迁移经验与通用 Skill 改进建议 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
+| [F2 治理经验吸纳与授权语义收口方案](2026-08-11-PROJECT-DOC-F2-LEARNINGS-20260811-F2治理经验吸纳与授权语义收口方案.md) | 记录两份 F2 报告的逐项取舍、两个 Skill 的请求分流、资产与验证证据改造、普通验证和生命周期关闭 | [ADR-0010](../../docs/adr/0010-route-report-plan-and-separate-action-authorization.md) |
