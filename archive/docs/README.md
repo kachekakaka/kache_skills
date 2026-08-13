@@ -40,3 +40,5 @@
 | [F2 project-doc-consistency 改进建议报告](F2-DOC-CONSISTENCY-01-project-doc-consistency改进建议-20260810.md) | 记录外部 F2 项目文档与验证身份治理后的可迁移经验与通用 Skill 改进建议 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [F2 治理经验吸纳与授权语义收口方案](2026-08-11-PROJECT-DOC-F2-LEARNINGS-20260811-F2治理经验吸纳与授权语义收口方案.md) | 记录两份 F2 报告的逐项取舍、两个 Skill 的请求分流、资产与验证证据改造、普通验证和生命周期关闭 | [ADR-0010](../../docs/adr/0010-route-report-plan-and-separate-action-authorization.md) |
 | [完整审计收缩覆盖硬门收口方案](2026-08-12-PROJECT-DOC-CONSISTENCY-CONTRACTION-GATE-20260812-完整审计收缩覆盖硬门收口方案.md) | 记录逐文档双遍集合硬门、内容收缩判据、精确名称决定补强及完整五样本前向验收 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
+| [活动项目文档真源收缩方案](2026-08-13-DOC-ACTIVE-TRUTH-CONTRACTION-20260813-活动项目文档真源收缩方案.md) | 记录当前项目需求、设计、术语、生命周期和测试说明的活动真源收缩，ADR 状态补强、普通验证及生命周期关闭 | [项目文档](../../docs/README.md) |
+| [裸调用交付路线确认方案](2026-08-13-PROJECT-DOC-ROUTE-CONFIRMATION-20260813-裸调用交付路线确认方案.md) | 记录两个项目文档 Skill 裸调用先确认报告／方案路线、合同与元数据同步、普通验证，以及接受显式前向矩阵 `not_run` 残余后的生命周期关闭 | [ADR-0011](../../docs/adr/0011-ask-delivery-route-before-auditing-ambiguous-invocations.md) |

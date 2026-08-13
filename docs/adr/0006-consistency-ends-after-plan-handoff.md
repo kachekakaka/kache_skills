@@ -1,5 +1,10 @@
 # 一致性 Skill 在方案交接后退出执行链
 
+> 状态：部分被细化。Consistency 保存方案后退出执行链的决定继续有效；一份综合方案可协调的跨职责范围以
+> [ADR-0008](0008-consistency-plan-coordinates-cross-responsibility-slices.md) 为准，未保存候选评审和请求分流以
+> [ADR-0009](0009-review-plan-candidate-before-saving.md) 与
+> [ADR-0010](0010-route-report-plan-and-separate-action-authorization.md) 为准。
+
 `project-doc-consistency` 的稳定价值是核对活动文档与当前事实、识别职责不清和内容膨胀，并生成可裁决的修订方案。
 把 `sync`、验证命令账本和施工后交接继续放在 Skill 中，会重复目标项目的协作与生命周期规则，也与用户只在生成
 方案时调用该 Skill 的实际用法不符。

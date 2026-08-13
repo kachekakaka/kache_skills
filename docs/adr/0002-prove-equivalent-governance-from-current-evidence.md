@@ -1,5 +1,11 @@
 # 允许用当前证据证明等价文档治理
 
+> 状态：部分被替代。不新增 profile／manifest、允许 skeleton 以当前证据保留成熟等价治理的决定继续有效；
+> 两个 Skill 共享六项治理账本的范围由 [ADR-0003](0003-separate-structure-governance-from-content-consistency.md)
+> 替代，施工退出与综合方案范围分别以 [ADR-0005](0005-skeleton-ends-after-plan-handoff.md)、
+> [ADR-0006](0006-consistency-ends-after-plan-handoff.md) 和
+> [ADR-0008](0008-consistency-plan-coordinates-cross-responsibility-slices.md) 为准。
+
 项目文档骨架同时支持标准骨架和成熟既有治理。既有项目不需要为了被识别而新增 profile、manifest、版本号或隐藏状态；每次检查都从当前入口、职责、生命周期、Registry、suite、CI 和机械门禁重新建立证据映射。等价按治理属性和安全结果判断，不要求路径、表格 schema 或机械实现逐项相同。只有全部必要职责能够唯一证明时才判为等价治理，证据不足或存在多个真源时保持待决，不能由项目自行声明等价。
 
 等价判定不采用综合打分，也不允许单项豁免。以下治理属性必须全部由当前证据证明：

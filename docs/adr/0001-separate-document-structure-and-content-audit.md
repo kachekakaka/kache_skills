@@ -1,5 +1,12 @@
 # 将文档结构管理与内容一致性处理拆为两个 Skill
 
+> 状态：部分被替代。两个 Skill 显式分责且运行时互不调用的决定继续有效；当前职责边界以
+> [ADR-0003](0003-separate-structure-governance-from-content-consistency.md)、
+> [ADR-0006](0006-consistency-ends-after-plan-handoff.md) 和
+> [ADR-0008](0008-consistency-plan-coordinates-cross-responsibility-slices.md) 为准，请求与保存流程以
+> [ADR-0009](0009-review-plan-candidate-before-saving.md) 和
+> [ADR-0010](0010-route-report-plan-and-separate-action-authorization.md) 为准。
+
 项目文档治理拆为两个显式调用的 Skill：`project-doc-skeleton` 负责目录、入口、生命周期和机械门禁，`project-doc-consistency`（原 `audit-project-docs`）负责对照项目证据检查事实正文、治理属性和测试设计，并仅在独立授权后同步已确认、可直接证明的文档事实。这样将“发现证据、裁决取舍、实施变化”分开，避免一个 Skill 同时判断内容、决定归属并执行结构修改，也避免修改、命令和 Git 授权在职责之间隐式继承。
 
 ## 考虑过的方案

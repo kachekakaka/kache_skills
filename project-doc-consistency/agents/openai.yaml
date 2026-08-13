@@ -1,7 +1,7 @@
 interface:
   display_name: "项目文档一致性检查与方案"
   short_description: "只读逐文档双遍核对并收缩活动真源，按请求报告或保存综合方案"
-  default_prompt: "使用 $project-doc-consistency 逐文档核对活动文档与当前事实并检查内容收缩；活动路径与双遍矩阵未完全对账时停止，不形成完整结论或保存，按请求只报告或形成方案并在保存后停止。"
+  default_prompt: "使用 $project-doc-consistency 核对当前活动文档与事实并检查内容收缩；如果我只调用 Skill 或没有说清只要报告还是形成方案，先询问交付路线且不要开始项目调查；路线明确后按对应只读流程执行，方案只在最终确认时保存并随后停止。"
 
 policy:
   allow_implicit_invocation: false

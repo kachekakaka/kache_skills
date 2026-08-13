@@ -1,5 +1,12 @@
 # 将检查、方案保存与施工拆成三个明确阶段
 
+> 状态：部分被替代。检查、方案保存与施工相互分离以及保存不授权施工继续有效；两个 Skill 的退出边界、综合方案
+> 范围、候选先评审和请求分流分别以 [ADR-0005](0005-skeleton-ends-after-plan-handoff.md)、
+> [ADR-0006](0006-consistency-ends-after-plan-handoff.md)、
+> [ADR-0008](0008-consistency-plan-coordinates-cross-responsibility-slices.md)、
+> [ADR-0009](0009-review-plan-candidate-before-saving.md) 和
+> [ADR-0010](0010-route-report-plan-and-separate-action-authorization.md) 为准。
+
 两个项目文档 Skill 的首次运行只完成检查并报告结论，不在同一次运行中持续施工，也不在对话中展开完整方案。每次检查结束都询问用户是否保存方案；只有用户明确说“落方案”或“保存方案”后，才把一份集中方案写入项目现有的活动方案位置，项目缺少该位置时只有 `project-doc-skeleton` 可以在同一明确授权下创建，`project-doc-consistency` 只报告缺少承接位置。
 
 保存后的临时活动方案状态为 `待确认`，每个差异项记录双方证据、影响、处理选项、推荐理由和用户决定；用户完成裁决并选择施工后才转为 `实施中`。同一待办最多一份活动方案，完成、取消或被替代后退出活动入口。用户可以另行选择原 Skill 的 `apply`/`sync`，也可以选择其他施工方式；任何施工都需要第二次明确选择。没有可施工问题时仍询问是否保存，若用户选择保存则形成检查记录，不伪造空活动方案。

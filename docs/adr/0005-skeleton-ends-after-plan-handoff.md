@@ -1,5 +1,9 @@
 # 骨架 Skill 在方案交接后退出执行链
 
+> 状态：部分被细化。Skeleton 保存方案后退出执行链的决定继续有效；未保存候选先评审及只在明确方案请求时进入
+> 该路线，分别以 [ADR-0009](0009-review-plan-candidate-before-saving.md) 和
+> [ADR-0010](0010-route-report-plan-and-separate-action-authorization.md) 为准。
+
 `project-doc-skeleton` 的实际使用场景是完整检查项目文档结构并生成后续实施依据。把施工、验证授权包、重试、
 验收和生命周期关闭继续放在 Skill 运行时，会让一次方案工具长期留在执行链中，并重复目标项目已经拥有的协作与
 生命周期规则。
