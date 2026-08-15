@@ -45,6 +45,8 @@ CONTRACTION_ACTION_MARKERS = (
     "摘要加链接",
     "合并段落",
     "简化表达",
+    "只保留导航",
+    "本地 README 成为唯一命令",
 )
 CONSISTENCY_ACTION_MARKERS = (
     "修正事实",
@@ -156,6 +158,9 @@ def collect_contract_issues(root: Path) -> list[str]:
             "所有文档级 `一致` 结论",
             "防语义误改轮",
             "不得自动调用 `project-doc-contraction`",
+            "表格、清单、矩阵或映射",
+            "动作按实际效果分类",
+            "事后重建表格不能补记",
         ),
     )
     require_tokens(
@@ -202,6 +207,8 @@ def collect_contract_issues(root: Path) -> list[str]:
             "累计可恢复尾部",
             "不能只依赖不可见内部记忆",
             "最终索引",
+            "`Rxxx`",
+            "事后重建不能补记",
             "不允许一个 Skill 自动调用另一个 Skill",
         ),
     )
@@ -309,6 +316,20 @@ class ProjectDocSkillResponsibilityTest(unittest.TestCase):
         issues = validate_plan_scope(
             "consistency",
             "修正事实并删除重复正文，再简化表达。",
+        )
+        self.assertIn(
+            "一致性方案包含删除、迁移、链接、合并或简化动作",
+            issues,
+        )
+        self.assertIn(
+            "同一方案混合一致性修正和内容收缩动作",
+            issues,
+        )
+
+    def test_consistency_readme_layering_deletion_is_contraction(self) -> None:
+        issues = validate_plan_scope(
+            "consistency",
+            "同步 Registry，并让聚合 README 只保留导航，本地 README 成为唯一命令。",
         )
         self.assertIn(
             "一致性方案包含删除、迁移、链接、合并或简化动作",
