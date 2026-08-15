@@ -23,7 +23,14 @@
 - `project-doc-consistency/` + `project-doc-shared/`
 - `project-doc-contraction/` + `project-doc-shared/`
 
-Skill 安装、commit、push、PR 和发布仍需分别取得明确授权。
+Skill 安装、commit、push、PR 和发布仍需分别取得明确授权。取得安装授权后，推荐使用：
+
+```text
+python -B -X utf8 SoftwareTesting/doc_consistency/install_project_doc_skills.py --apply --skills project-doc-consistency
+```
+
+安装器精确镜像目标目录，并在可调用 Skill 中生成 `SOURCE-PROVENANCE.json`；可用 `--verify-only` 复核源提交与逐文件
+SHA-256。直接复制仍允许，但缺少或不匹配 provenance 时审计只能报告版本无法验证。
 
 标准骨架路线的 T-DOC 从 `project-doc-skeleton/assets/SoftwareTesting/doc_consistency/` 整文件交付并逐字节比较：
 
@@ -34,7 +41,7 @@ Skill 安装、commit、push、PR 和发布仍需分别取得明确授权。
 ## 验证入口
 
 - [T-DOC](SoftwareTesting/doc_consistency/README.md)：验证标准骨架、活动入口、生命周期、归档、顶层 Markdown 根
-  所有权，以及本仓库三个 Skill 的职责隔离合同。
+  所有权，以及本仓库三个 Skill 的职责隔离、consistency 反证审计和安装 provenance 合同。
 - [项目文档 Skill 前向试用](SoftwareTesting/manual/project_doc_skills/README.md)：`explicit` 协议；当前标准矩阵
   继续验证 skeleton 与 consistency 的既有用户可观察合同，不在普通验证中自动执行。
 

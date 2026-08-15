@@ -16,6 +16,9 @@ CONSISTENCY_AGENT_PATH = Path("project-doc-consistency/agents/openai.yaml")
 TEST_CONTRACT_PATH = Path(
     "project-doc-consistency/references/test-design-audit.md"
 )
+COUNTEREVIDENCE_PATH = Path(
+    "project-doc-consistency/references/counterevidence-audit.md"
+)
 CONTRACTION_PATH = Path("project-doc-contraction/SKILL.md")
 CONTRACTION_AGENT_PATH = Path("project-doc-contraction/agents/openai.yaml")
 SHARED_PROTOCOL_PATH = Path(
@@ -38,6 +41,7 @@ SHARED_PROTOCOL_LINK = (
 SHARED_VALIDATION_LINK = (
     "../project-doc-shared/references/validation-planning.md"
 )
+COUNTEREVIDENCE_LINK = "references/counterevidence-audit.md"
 
 CONTRACTION_ACTION_MARKERS = (
     "删除重复正文",
@@ -119,6 +123,7 @@ def collect_contract_issues(root: Path) -> list[str]:
         root, CONSISTENCY_AGENT_PATH, issues
     )
     test_contract = read_required(root, TEST_CONTRACT_PATH, issues)
+    counterevidence = read_required(root, COUNTEREVIDENCE_PATH, issues)
     contraction = read_required(root, CONTRACTION_PATH, issues)
     contraction_agent = read_required(
         root, CONTRACTION_AGENT_PATH, issues
@@ -161,6 +166,23 @@ def collect_contract_issues(root: Path) -> list[str]:
             "表格、清单、矩阵或映射",
             "动作按实际效果分类",
             "事后重建表格不能补记",
+            COUNTEREVIDENCE_LINK,
+            "SOURCE-PROVENANCE.json",
+            "四类跨载体扫描",
+            "可证伪主张",
+        ),
+    )
+    require_tokens(
+        issues,
+        COUNTEREVIDENCE_PATH.as_posix(),
+        counterevidence,
+        (
+            "初始状态与运行时转换",
+            "允许、禁止、退役合同与夹具",
+            "聚合入口与成员闭包",
+            "身份与操作粒度",
+            "第一轮反证式查漏",
+            "第二轮防语义误改",
         ),
     )
     require_tokens(
@@ -210,6 +232,8 @@ def collect_contract_issues(root: Path) -> list[str]:
             "`Rxxx`",
             "事后重建不能补记",
             "不允许一个 Skill 自动调用另一个 Skill",
+            "仓库外正式轨迹",
+            "不得事后补造",
         ),
     )
     require_tokens(
@@ -349,6 +373,7 @@ class ProjectDocSkillResponsibilityTest(unittest.TestCase):
                 CONSISTENCY_PATH,
                 CONSISTENCY_AGENT_PATH,
                 TEST_CONTRACT_PATH,
+                COUNTEREVIDENCE_PATH,
                 CONTRACTION_PATH,
                 CONTRACTION_AGENT_PATH,
                 SHARED_PROTOCOL_PATH,
