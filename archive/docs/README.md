@@ -43,3 +43,5 @@
 | [活动项目文档真源收缩方案](2026-08-13-DOC-ACTIVE-TRUTH-CONTRACTION-20260813-活动项目文档真源收缩方案.md) | 记录当前项目需求、设计、术语、生命周期和测试说明的活动真源收缩，ADR 状态补强、普通验证及生命周期关闭 | [项目文档](../../docs/README.md) |
 | [裸调用交付路线确认方案](2026-08-13-PROJECT-DOC-ROUTE-CONFIRMATION-20260813-裸调用交付路线确认方案.md) | 记录两个项目文档 Skill 裸调用先确认报告／方案路线、合同与元数据同步、普通验证，以及接受显式前向矩阵 `not_run` 残余后的生命周期关闭 | [ADR-0011](../../docs/adr/0011-ask-delivery-route-before-auditing-ambiguous-invocations.md) |
 | [长期文档收缩完整性补强方案](2026-08-13-PROJECT-DOC-CONSISTENCY-SEMANTIC-COVERAGE-20260813-语义内容块与跨真源重叠覆盖补强方案.md) | 记录逐长期文档收缩处置、完整／增量边界、两项条件测试设计规则、过拟合前向方案收缩及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
+| [长期文档全量语义审计与收缩复核补强方案](2026-08-15-PROJECT-DOC-CONSISTENCY-EXHAUSTIVE-REVIEW-20260815-长期文档全量语义审计与收缩复核补强方案.md) | 记录全部实质内容双遍覆盖、重复与声明漂移检查、无需收缩负向证明、查漏／防误伤 review 及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
+| [长期文档可见覆盖证据与复核有效性补强方案](2026-08-15-PROJECT-DOC-CONSISTENCY-VISIBLE-COVERAGE-20260815-长期文档可见覆盖证据与复核有效性补强方案.md) | 记录逐长期文档可见覆盖条目、集合式无需收缩禁令、查漏／防误伤复核证据及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
