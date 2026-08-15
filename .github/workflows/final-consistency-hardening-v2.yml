@@ -1,0 +1,105 @@
+name: 验证并发布一致性 Skill 最终补强 v2
+
+on:
+  push:
+    branches:
+      - agent/final-consistency-hardening-20260816
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout immutable main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify base and extract patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "9f0510ee92ea958d2a1a4988bb4ca957fad53a70"
+          git fetch origin main agent/final-consistency-hardening-20260816
+          test "$(git rev-parse origin/main)" = "9f0510ee92ea958d2a1a4988bb4ca957fad53a70"
+          git show origin/agent/final-consistency-hardening-20260816:.github/workflows/final-consistency-hardening.yml > /tmp/source-workflow.yml
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path('/tmp/source-workflow.yml').read_text(encoding='utf-8').splitlines()
+          marker = '      - name: Apply narrow consistency hardening'
+          try:
+              marker_index = source.index(marker)
+          except ValueError as exc:
+              raise SystemExit('missing patch step') from exc
+          try:
+              run_index = source.index('        run: |', marker_index)
+          except ValueError as exc:
+              raise SystemExit('missing patch run block') from exc
+
+          body: list[str] = []
+          for line in source[run_index + 1:]:
+              if line.startswith('      - name:'):
+                  break
+              if line.startswith('          '):
+                  body.append(line[10:])
+              elif line == '':
+                  body.append('')
+              else:
+                  raise SystemExit(f'unexpected patch indentation: {line!r}')
+
+          if not body or body[0] != "python - <<'PY'":
+              raise SystemExit(f'unexpected patch runner: {body[:1]!r}')
+          body[0] = "sed '/^from __future__ import annotations$/d' <<'PY' | python"
+          Path('/tmp/apply-hardening.sh').write_text(
+              '\n'.join(body) + '\n', encoding='utf-8', newline='\n'
+          )
+          PY
+
+      - name: Apply narrow hardening
+        shell: bash
+        run: bash /tmp/apply-hardening.sh
+
+      - name: Run repository validations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_contraction_confirmation.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py --workspace-root .
+          python -m py_compile \
+            SoftwareTesting/doc_consistency/install_project_doc_skills.py \
+            SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py \
+            SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py
+          git diff --check
+
+      - name: Commit and push main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "9f0510ee92ea958d2a1a4988bb4ca957fad53a70"
+          git config user.name "OpenAI"
+          git config user.email "noreply@openai.com"
+          git add \
+            README.md \
+            docs/需求文档.md \
+            docs/设计文档.md \
+            docs/软件测试.md \
+            project-doc-consistency/SKILL.md \
+            project-doc-consistency/agents/openai.yaml \
+            project-doc-consistency/references/counterevidence-audit.md \
+            project-doc-shared/references/long-audit-protocol.md \
+            SoftwareTesting/doc_consistency/README.md \
+            SoftwareTesting/doc_consistency/install_project_doc_skills.py \
+            SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py \
+            SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py \
+            SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
+          git commit -m "补强一致性反证审计与安装追溯"
+          git push origin HEAD:main
