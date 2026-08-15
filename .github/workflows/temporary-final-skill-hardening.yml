@@ -1,0 +1,137 @@
+name: Temporary final skill hardening
+
+on:
+  push:
+    branches:
+      - agent/refine-doc-consistency-audit
+    paths:
+      - .github/workflows/temporary-final-skill-hardening.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden-and-validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply narrow hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected exactly one anchor, found {count}: {old[:80]!r}")
+              file.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+
+          replace_once(
+              "project-doc-consistency/SKILL.md",
+              "- 有两个及以上稳定一级职责章节（通常是文档标题下的 `##`）时，每个一级职责章节至少一个单元，不得跨章合并；\n- 同一章内若角色、所有者、契约、适用前提或生命周期发生变化，继续拆分；",
+              "- 有两个及以上稳定一级职责章节（通常是文档标题下的 `##`）时，每个一级职责章节至少一个单元，不得跨章合并；\n- 表格、清单、矩阵或映射中的各行／项若分别声明不同值、所有者、状态、前提、例外或消费者，必须分别成为单元；只有这些字段与结论完全相同且逐项锚点可见时才可显式分组合并，不能用章节级结论覆盖独立行／项；\n- 同一章内若角色、所有者、契约、适用前提或生命周期发生变化，继续拆分；",
+          )
+          replace_once(
+              "project-doc-consistency/SKILL.md",
+              "若某条错误表述必须退出，方案使用能恢复当前合同的精确替换、状态校准或所有者指针，而不是把“删除内容”作为独立\n一致性目标。没有一致性问题时不创建空方案，也不把纯收缩候选混入方案。",
+              "动作按实际效果分类，不按“职责收口”“真源恢复”“README 分层”或“清场”等名称分类。若各处的值、前提、例外、状态、所有者身份和消费者义务已经一致，动作只是删除、移动、缩短语义等价正文或只保留链接，则它属于内容收缩；一致性方案不能仅为减少副本或恢复文档层级执行该动作。\n\n若某条错误表述必须退出，方案使用能恢复当前合同的精确替换、状态校准或所有者指针，而不是把“删除内容”作为独立\n一致性目标。没有一致性问题时不创建空方案，也不把纯收缩候选混入方案。",
+          )
+          replace_once(
+              "project-doc-consistency/SKILL.md",
+              "两类评审都按共享长审计协议形成编号评审分片并自动续跑。评审改变旧结论或动作时，必须交付 `Cnnn` 并在最终索引",
+              "评审轮次只有在正式 `Rxxx` 分片中实际交付上述逐份或逐项记录后才计数；最终摘要、方案正文、审阅包或事后重建表格不能补记为已完成评审。缺少正式记录时必须继续评审，不得询问保存。\n\n两类评审都按共享长审计协议形成编号评审分片并自动续跑。评审改变旧结论或动作时，必须交付 `Cnnn` 并在最终索引",
+          )
+
+          replace_once(
+              "project-doc-shared/references/long-audit-protocol.md",
+              "一个文档可以跨多个连续分片；只有该文档全部审计单元完成后，才能给出文档级处置。\n\n## 累计可恢复尾部",
+              "一个文档可以跨多个连续分片；只有该文档全部审计单元完成后，才能给出文档级处置。\n\n## 正式评审分片 `Rxxx`\n\n- 每轮评审按调用 Skill 定义的固定文档集合或动作集合形成一个或多个连续 `Rxxx`。\n- 每个 `Rxxx` 必须在正文中实际列出本轮负责的成员、原始证据和对应结论；不能只报告新增发现、数量或整体摘要。\n- 只有全部固定成员在正式 `Rxxx` 中有归宿，该轮才可计为完成。方案正文、最终索引、审阅包或任务结束后的事后重建不能补记缺失的评审记录。\n- 评审导致结论或动作变化时，先交付 `Cnnn`，再在后续 `Rxxx` 中重做受影响记录。\n\n## 累计可恢复尾部",
+          )
+
+          replace_once(
+              "project-doc-consistency/references/test-design-audit.md",
+              "- 已经删除、替代或收窄的旧行为、路径、生命周期或职责是否仍被强制。",
+              "- 已经删除、替代或收窄的旧行为、路径、生命周期或职责是否仍被强制；\n- 正向／允许夹具是否仍把当前契约禁止的依赖、字段、路径或状态当作合法输入，负向夹具是否仍拒绝当前允许行为。",
+          )
+
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              "    \"简化表达\",\n)",
+              "    \"简化表达\",\n    \"只保留导航\",\n    \"本地 README 成为唯一命令\",\n)",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              "            \"不得自动调用 `project-doc-contraction`\",\n        ),",
+              "            \"不得自动调用 `project-doc-contraction`\",\n            \"表格、清单、矩阵或映射\",\n            \"动作按实际效果分类\",\n            \"事后重建表格不能补记\",\n        ),",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              "            \"最终索引\",\n            \"不允许一个 Skill 自动调用另一个 Skill\",",
+              "            \"最终索引\",\n            \"`Rxxx`\",\n            \"事后重建不能补记\",\n            \"不允许一个 Skill 自动调用另一个 Skill\",",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              "        self.assertIn(\n            \"同一方案混合一致性修正和内容收缩动作\",\n            issues,\n        )\n\n    def test_contraction_must_not_decide_fact_conflict(self) -> None:",
+              "        self.assertIn(\n            \"同一方案混合一致性修正和内容收缩动作\",\n            issues,\n        )\n\n    def test_consistency_readme_layering_deletion_is_contraction(self) -> None:\n        issues = validate_plan_scope(\n            \"consistency\",\n            \"同步 Registry，并让聚合 README 只保留导航，本地 README 成为唯一命令。\",\n        )\n        self.assertIn(\n            \"一致性方案包含删除、迁移、链接、合并或简化动作\",\n            issues,\n        )\n        self.assertIn(\n            \"同一方案混合一致性修正和内容收缩动作\",\n            issues,\n        )\n\n    def test_contraction_must_not_decide_fact_conflict(self) -> None:",
+          )
+
+          replace_once(
+              "docs/需求文档.md",
+              "- 对范围内每份活动文档完整核对事实、规则、契约、状态、所有权和直接消费者，不得抽查。自然契约单元至少按稳定\n  一级职责章节划分，不得跨章用一句“静态吻合”代表未检查内容。",
+              "- 对范围内每份活动文档完整核对事实、规则、契约、状态、所有权和直接消费者，不得抽查。自然契约单元至少按稳定\n  一级职责章节划分，不得跨章用一句“静态吻合”代表未检查内容。\n- 表格、清单、矩阵或映射中分别声明不同值、所有者、状态、前提、例外或消费者的行／项必须分别核对；章节级结论不能覆盖独立成员。",
+          )
+          replace_once(
+              "docs/需求文档.md",
+              "- 疑似重复、实现镜像、过程快照或内容错位但没有改变含义时，只记录 `后续收缩候选`；不得判断文档篇幅、默认加载量，\n  不得形成删除、迁移、摘要加链接、合并或简化动作，也不输出 `无需收缩`。",
+              "- 疑似重复、实现镜像、过程快照或内容错位但没有改变含义时，只记录 `后续收缩候选`；不得判断文档篇幅、默认加载量，\n  不得形成删除、迁移、摘要加链接、合并或简化动作，也不输出 `无需收缩`。动作按实际效果分类：语义已一致而只为减少副本、恢复 README 分层或只留链接的动作仍属于收缩。",
+          )
+          replace_once(
+              "docs/需求文档.md",
+              "- 第一轮评审逐份挑战全部文档级 `一致` 结论，查漏事实、契约、状态、所有权、Registry 和消费者漂移；第二轮逐项\n  检查拟议一致性修正是否错误改变产品语义、权限、安全边界、测试选择、运行行为或历史决定。",
+              "- 第一轮评审逐份挑战全部文档级 `一致` 结论，查漏事实、契约、状态、所有权、Registry 和消费者漂移；第二轮逐项\n  检查拟议一致性修正是否错误改变产品语义、权限、安全边界、测试选择、运行行为或历史决定。两轮必须在正式 `Rxxx` 中交付逐份／逐项记录，不能由最终摘要或事后审阅包补记。",
+          )
+
+          replace_once(
+              "docs/设计文档.md",
+              "Consistency 以自然契约单元核对具体声明、当前所有者／直接证据和一致性结论。稳定一级职责章节至少各形成一个单元，\n不得跨章合并成统一“静态吻合”。文档级处置只有 `一致`、`需要修正`、`无法核验`、`需要决策` 或 `未覆盖`。",
+              "Consistency 以自然契约单元核对具体声明、当前所有者／直接证据和一致性结论。稳定一级职责章节至少各形成一个单元，\n不得跨章合并成统一“静态吻合”；表格、清单、矩阵或映射中的独立值、所有者、状态、前提、例外和消费者也分别形成单元。文档级处置只有 `一致`、`需要修正`、`无法核验`、`需要决策` 或 `未覆盖`。",
+          )
+          replace_once(
+              "docs/设计文档.md",
+              "Consistency 的发现只覆盖事实、契约、状态、所有权、Registry／入口和直接消费者。纯重复、镜像、过程或错位内容只进入\n`后续收缩候选`，不产生收缩动作。第一轮评审逐份挑战所有 `一致` 文档；第二轮逐项确认修正不会改变产品语义、权限、\n安全边界、测试选择、运行行为或历史决定。",
+              "Consistency 的发现只覆盖事实、契约、状态、所有权、Registry／入口和直接消费者。纯重复、镜像、过程或错位内容只进入\n`后续收缩候选`，不产生收缩动作；动作按实际效果而不是“真源恢复”或“README 分层”等名称分类。第一轮评审逐份挑战所有 `一致` 文档；第二轮逐项确认修正不会改变产品语义、权限、\n安全边界、测试选择、运行行为或历史决定，且只有正式 `Rxxx` 中实际交付的逐份／逐项记录可以计入轮次。",
+          )
+          PY
+      - name: Run repository-native validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py --workspace-root .
+          git diff --check origin/main...HEAD
+      - name: Commit validated changes and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/temporary-final-skill-hardening.yml
+          git config user.name "kachekakaka"
+          git config user.email "74711397+kachekakaka@users.noreply.github.com"
+          git add project-doc-consistency/SKILL.md \
+                  project-doc-consistency/references/test-design-audit.md \
+                  project-doc-shared/references/long-audit-protocol.md \
+                  SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py \
+                  docs/需求文档.md docs/设计文档.md
+          git commit -m "收紧一致性审计的结构化单元与评审证据"
+          git push origin HEAD:agent/refine-doc-consistency-audit
