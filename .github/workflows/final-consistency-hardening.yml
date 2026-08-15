@@ -1,0 +1,486 @@
+name: 临时验证并发布一致性 Skill 最终补强
+
+on:
+  push:
+    branches:
+      - agent/final-consistency-hardening-20260816
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify immutable base
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "9f0510ee92ea958d2a1a4988bb4ca957fad53a70"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "9f0510ee92ea958d2a1a4988bb4ca957fad53a70"
+
+      - name: Apply narrow consistency hardening
+        shell: bash
+        run: |
+          python - <<'PY'
+          COUNTER_REF = '# 一致性反证与跨载体扫描参考\n\n本文只扩展 `project-doc-consistency` 的 `full` 审计方法，用来主动寻找“初审看起来一致”背后的跨载体矛盾。\n它不建立新的业务权威，不做内容收缩，也不要求全仓两两比较。\n\n## 使用条件\n\n- `full` 审计必须完整读取本文，并在普通自然契约单元审计后完成四类扫描。\n- `incremental` 只有在内容种子涉及时间状态、允许／禁止合同、聚合入口或操作粒度时读取相应小节。\n- 扫描只沿已冻结文档和一轮直接证据工作；发现新的活动文档范围问题时按主 Skill 记录 `未覆盖`，不得静默扩张。\n\n## 四类跨载体扫描\n\n### 1. 初始状态与运行时转换\n\n检查“启动时、初始、当前、阶段性、永久、仅在某阶段”等限定，是否与状态机、切换 API、代际、租约、恢复路径或\n直接消费者的运行期转换相冲突。至少记录初始态、允许转换、失败态、终态和是否持久化。\n\n### 2. 允许、禁止、退役合同与夹具\n\n当当前权威已经禁止、退役或收窄依赖、字段、路径、身份或状态时，检查正向／允许夹具是否仍把它作为合法输入；同时检查\n负向夹具是否仍拒绝当前已经允许的行为。测试和实现共同接受旧行为时，不能以“测试通过”证明一致。\n\n### 3. 聚合入口与成员闭包\n\n对 `all`、`run-all`、suite、manifest、expected、Registry 汇总或“顺序跑以上”等声明，分别列出文档宣称的成员和\n实际调度／选择成员，比较遗漏、多余、顺序或条件差异。数量相同不能代替成员闭包。\n\n### 4. 身份与操作粒度\n\n“同一 source／lease／snapshot”不自动等于“同一请求／响应／调用”。检查普通操作与独立精确操作、可选字段与显式\n查询、共享身份与独立生命周期是否被文档错误合并。必须点名实际调用边界和直接消费者。\n\n## 正式证据\n\n每类扫描都在一个或多个正式 `Axxx` 中记录：\n\n1. 被挑战的具体声明和路径锚点；\n2. 当前权威与初审正向证据；\n3. 不同角色的相反证据或邻接消费者；\n4. 结论、发现或明确残余。\n\n没有适用候选时，也要写明检查过的限定词／聚合入口／夹具／操作边界和“不适用”的具体理由；“已搜索、未发现问题”\n或文件数量对账不能算完成。\n\n## 第一轮反证式查漏\n\n进入第一轮时，对每份文档级 `一致` 结论独立记录：\n\n- 可证伪主张；\n- 初审正向证据；\n- 与正向证据不同角色的相反证据或邻接消费者；\n- `改变`／`未改变`；\n- 反证为何推翻或未推翻原结论。\n\n只有主张、证据角色和结论完全相同，才可显式分组；即使分组，每条路径仍要独立命名并给出锚点。\n`N/N 不变`、`同前`、`原证据仍成立` 或按职责类别列名单都不能替代上述记录。\n\n## 第二轮防语义误改\n\n每项拟议修正必须分别回答：产品语义、权限／安全边界、测试选择／分类／覆盖义务、运行行为、历史决定和一层直接消费者\n是否改变，并给出 `通过`、`修改` 或 `撤销`。一段综合说明不能代替逐轴结论。\n\n## 失败关闭\n\n任一四类扫描缺少正式记录、第一轮缺少不同角色反证、第二轮缺少逐轴结论，或正式记录在保存前已无法从当前线程或经\n用户授权的仓库外轨迹中取得时，完整性门失败；只能报告 `未覆盖`，不得询问保存完整方案。\n'
+          INSTALLER_SCRIPT = '#!/usr/bin/env python3\n"""精确镜像安装项目文档 Skill，并生成可验证来源清单。"""\n\nfrom __future__ import annotations\n\nimport argparse\nimport hashlib\nimport json\nimport shutil\nimport subprocess\nimport sys\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nfrom typing import Iterable\n\n\nREPO_ROOT = Path(__file__).resolve().parents[2]\nPROVENANCE_NAME = "SOURCE-PROVENANCE.json"\nCALLABLE_DEPENDENCIES = {\n    "project-doc-consistency": ("project-doc-consistency", "project-doc-shared"),\n    "project-doc-contraction": ("project-doc-contraction", "project-doc-shared"),\n    "project-doc-skeleton": ("project-doc-skeleton",),\n}\n\n\ndef sha256_file(path: Path) -> str:\n    digest = hashlib.sha256()\n    with path.open("rb") as stream:\n        for block in iter(lambda: stream.read(1024 * 1024), b""):\n            digest.update(block)\n    return digest.hexdigest()\n\n\ndef iter_files(root: Path, roots: Iterable[str]) -> dict[str, str]:\n    result: dict[str, str] = {}\n    for root_name in roots:\n        base = root / root_name\n        if not base.is_dir():\n            raise FileNotFoundError(f"缺少目录: {base}")\n        for path in sorted(base.rglob("*")):\n            if not path.is_file() or path.name == PROVENANCE_NAME:\n                continue\n            relative = path.relative_to(root).as_posix()\n            result[relative] = sha256_file(path)\n    return result\n\n\ndef mirror_directory(source: Path, target: Path) -> None:\n    if target.exists():\n        if not target.is_dir():\n            raise RuntimeError(f"安装目标不是目录: {target}")\n        shutil.rmtree(target)\n    shutil.copytree(source, target)\n\n\ndef git_output(source_root: Path, *args: str) -> str:\n    result = subprocess.run(\n        ("git", "-C", str(source_root), *args),\n        check=False,\n        capture_output=True,\n        text=True,\n        encoding="utf-8",\n        errors="replace",\n    )\n    if result.returncode != 0:\n        raise RuntimeError(\n            f"Git 命令失败: git {\' \'.join(args)}\\n{result.stdout}{result.stderr}"\n        )\n    return result.stdout.strip()\n\n\ndef git_metadata(source_root: Path) -> dict[str, str]:\n    status = git_output(source_root, "status", "--porcelain")\n    if status:\n        raise RuntimeError("源仓库工作树或索引不干净，拒绝生成可追溯安装")\n    branch = git_output(source_root, "branch", "--show-current")\n    if not branch:\n        raise RuntimeError("源仓库处于 detached HEAD，拒绝安装")\n    return {\n        "source_repository": git_output(source_root, "remote", "get-url", "origin"),\n        "source_branch": branch,\n        "source_commit": git_output(source_root, "rev-parse", "HEAD"),\n    }\n\n\ndef build_manifest(\n    target_root: Path,\n    skill_name: str,\n    metadata: dict[str, str],\n) -> dict[str, object]:\n    roots = CALLABLE_DEPENDENCIES[skill_name]\n    return {\n        "schema_version": 1,\n        "skill_name": skill_name,\n        **metadata,\n        "installed_at_utc": datetime.now(timezone.utc).isoformat(),\n        "roots": list(roots),\n        "files": iter_files(target_root, roots),\n    }\n\n\ndef write_manifest(\n    target_root: Path,\n    skill_name: str,\n    metadata: dict[str, str],\n) -> Path:\n    manifest_path = target_root / skill_name / PROVENANCE_NAME\n    manifest = build_manifest(target_root, skill_name, metadata)\n    manifest_path.write_text(\n        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\\n",\n        encoding="utf-8",\n        newline="\\n",\n    )\n    return manifest_path\n\n\ndef verify_manifest(target_root: Path, skill_name: str) -> dict[str, object]:\n    manifest_path = target_root / skill_name / PROVENANCE_NAME\n    if not manifest_path.is_file():\n        return {"state": "missing", "skill_name": skill_name, "issues": ["缺少来源清单"]}\n    try:\n        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))\n    except (OSError, json.JSONDecodeError) as exc:\n        return {\n            "state": "mismatch",\n            "skill_name": skill_name,\n            "issues": [f"来源清单不可读: {exc}"],\n        }\n\n    issues: list[str] = []\n    if manifest.get("schema_version") != 1:\n        issues.append("schema_version 必须为 1")\n    if manifest.get("skill_name") != skill_name:\n        issues.append("skill_name 不匹配")\n    roots = manifest.get("roots")\n    files = manifest.get("files")\n    if not isinstance(roots, list) or not all(isinstance(item, str) for item in roots):\n        issues.append("roots 必须是字符串列表")\n        roots = []\n    if not isinstance(files, dict) or not all(\n        isinstance(path, str) and isinstance(value, str)\n        for path, value in (files.items() if isinstance(files, dict) else ())\n    ):\n        issues.append("files 必须是路径到 SHA-256 的映射")\n        files = {}\n\n    actual: dict[str, str] = {}\n    if roots:\n        try:\n            actual = iter_files(target_root, roots)\n        except (OSError, RuntimeError) as exc:\n            issues.append(str(exc))\n\n    expected_paths = set(files)\n    actual_paths = set(actual)\n    for missing in sorted(expected_paths - actual_paths):\n        issues.append(f"缺少安装文件: {missing}")\n    for extra in sorted(actual_paths - expected_paths):\n        issues.append(f"存在清单外文件: {extra}")\n    for path in sorted(expected_paths & actual_paths):\n        if files[path] != actual[path]:\n            issues.append(f"SHA-256 不匹配: {path}")\n\n    required_metadata = ("source_repository", "source_branch", "source_commit")\n    for field in required_metadata:\n        value = manifest.get(field)\n        if not isinstance(value, str) or not value.strip():\n            issues.append(f"缺少来源字段: {field}")\n\n    return {\n        "state": "verified" if not issues else "mismatch",\n        "skill_name": skill_name,\n        "source_repository": manifest.get("source_repository"),\n        "source_branch": manifest.get("source_branch"),\n        "source_commit": manifest.get("source_commit"),\n        "file_count": len(files),\n        "issues": issues,\n    }\n\n\ndef install(\n    source_root: Path,\n    target_root: Path,\n    skills: Iterable[str],\n    metadata: dict[str, str],\n) -> list[dict[str, object]]:\n    selected = tuple(dict.fromkeys(skills))\n    unknown = [name for name in selected if name not in CALLABLE_DEPENDENCIES]\n    if unknown:\n        raise ValueError(f"未知 Skill: {\', \'.join(unknown)}")\n\n    roots: list[str] = []\n    for skill_name in selected:\n        for root_name in CALLABLE_DEPENDENCIES[skill_name]:\n            if root_name not in roots:\n                roots.append(root_name)\n\n    target_root.mkdir(parents=True, exist_ok=True)\n    for root_name in roots:\n        mirror_directory(source_root / root_name, target_root / root_name)\n\n    for skill_name in selected:\n        write_manifest(target_root, skill_name, metadata)\n\n    results = [verify_manifest(target_root, name) for name in selected]\n    failed = [item for item in results if item["state"] != "verified"]\n    if failed:\n        raise RuntimeError(json.dumps(failed, ensure_ascii=False, indent=2))\n    return results\n\n\ndef parse_args() -> argparse.Namespace:\n    parser = argparse.ArgumentParser(description=__doc__)\n    parser.add_argument("--source-root", type=Path, default=REPO_ROOT)\n    parser.add_argument(\n        "--target-root",\n        type=Path,\n        default=Path.home() / ".codex" / "skills",\n    )\n    parser.add_argument(\n        "--skills",\n        nargs="+",\n        choices=sorted(CALLABLE_DEPENDENCIES),\n        default=sorted(CALLABLE_DEPENDENCIES),\n    )\n    parser.add_argument("--apply", action="store_true")\n    parser.add_argument("--verify-only", action="store_true")\n    return parser.parse_args()\n\n\ndef main() -> int:\n    args = parse_args()\n    source_root = args.source_root.resolve()\n    target_root = args.target_root.resolve()\n\n    if args.verify_only:\n        results = [verify_manifest(target_root, name) for name in args.skills]\n        print(json.dumps(results, ensure_ascii=False, indent=2))\n        return 0 if all(item["state"] == "verified" for item in results) else 1\n\n    if not args.apply:\n        print("未指定 --apply；未修改安装目录。", file=sys.stderr)\n        return 2\n\n    metadata = git_metadata(source_root)\n    results = install(source_root, target_root, args.skills, metadata)\n    print(json.dumps(results, ensure_ascii=False, indent=2))\n    return 0\n\n\nif __name__ == "__main__":\n    raise SystemExit(main())\n'
+          INSTALLER_TEST = '#!/usr/bin/env python3\n"""验证项目文档 Skill 精确镜像安装和来源清单。"""\n\nfrom __future__ import annotations\n\nimport importlib.util\nimport tempfile\nimport unittest\nfrom pathlib import Path\n\n\nROOT = Path(__file__).resolve().parents[2]\nINSTALLER_PATH = ROOT / "SoftwareTesting/doc_consistency/install_project_doc_skills.py"\n\nSPEC = importlib.util.spec_from_file_location("project_doc_skill_installer", INSTALLER_PATH)\nif SPEC is None or SPEC.loader is None:\n    raise RuntimeError(f"无法加载安装器: {INSTALLER_PATH}")\nINSTALLER = importlib.util.module_from_spec(SPEC)\nSPEC.loader.exec_module(INSTALLER)\n\n\nclass ProjectDocSkillInstallerTest(unittest.TestCase):\n    def test_exact_mirror_and_provenance_verification(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            source = root / "source"\n            target = root / "target"\n            (source / "project-doc-consistency/references").mkdir(parents=True)\n            (source / "project-doc-shared/references").mkdir(parents=True)\n            (source / "project-doc-consistency/SKILL.md").write_text(\n                "skill\\n", encoding="utf-8", newline="\\n"\n            )\n            (source / "project-doc-consistency/references/example.md").write_text(\n                "reference\\n", encoding="utf-8", newline="\\n"\n            )\n            (source / "project-doc-shared/references/shared.md").write_text(\n                "shared\\n", encoding="utf-8", newline="\\n"\n            )\n            (target / "project-doc-consistency").mkdir(parents=True)\n            (target / "project-doc-consistency/stale.txt").write_text(\n                "stale\\n", encoding="utf-8"\n            )\n\n            metadata = {\n                "source_repository": "https://example.invalid/repo.git",\n                "source_branch": "main",\n                "source_commit": "a" * 40,\n            }\n            results = INSTALLER.install(\n                source,\n                target,\n                ("project-doc-consistency",),\n                metadata,\n            )\n\n            self.assertEqual("verified", results[0]["state"])\n            self.assertFalse(\n                (target / "project-doc-consistency/stale.txt").exists()\n            )\n            manifest = target / "project-doc-consistency/SOURCE-PROVENANCE.json"\n            self.assertTrue(manifest.is_file())\n\n            verified = INSTALLER.verify_manifest(\n                target, "project-doc-consistency"\n            )\n            self.assertEqual("verified", verified["state"], verified)\n\n    def test_modified_installed_file_is_mismatch(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            source = root / "source"\n            target = root / "target"\n            (source / "project-doc-consistency").mkdir(parents=True)\n            (source / "project-doc-shared/references").mkdir(parents=True)\n            (source / "project-doc-consistency/SKILL.md").write_text(\n                "skill\\n", encoding="utf-8", newline="\\n"\n            )\n            (source / "project-doc-shared/references/shared.md").write_text(\n                "shared\\n", encoding="utf-8", newline="\\n"\n            )\n            INSTALLER.install(\n                source,\n                target,\n                ("project-doc-consistency",),\n                {\n                    "source_repository": "repo",\n                    "source_branch": "main",\n                    "source_commit": "b" * 40,\n                },\n            )\n            (target / "project-doc-shared/references/shared.md").write_text(\n                "changed\\n", encoding="utf-8", newline="\\n"\n            )\n\n            result = INSTALLER.verify_manifest(\n                target, "project-doc-consistency"\n            )\n            self.assertEqual("mismatch", result["state"])\n            self.assertTrue(\n                any("SHA-256 不匹配" in issue for issue in result["issues"]),\n                result,\n            )\n\n    def test_missing_manifest_is_reported(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            result = INSTALLER.verify_manifest(\n                Path(temporary), "project-doc-consistency"\n            )\n            self.assertEqual("missing", result["state"])\n\n\nif __name__ == "__main__":\n    unittest.main()\n'
+          COUNTER_TEST = '#!/usr/bin/env python3\n"""机械检查一致性反证扫描、评审证据和来源身份合同。"""\n\nfrom __future__ import annotations\n\nimport unittest\nfrom pathlib import Path\nfrom typing import Iterable\n\n\nROOT = Path(__file__).resolve().parents[2]\nSKILL_PATH = Path("project-doc-consistency/SKILL.md")\nREFERENCE_PATH = Path(\n    "project-doc-consistency/references/counterevidence-audit.md"\n)\nSHARED_PATH = Path("project-doc-shared/references/long-audit-protocol.md")\nAGENT_PATH = Path("project-doc-consistency/agents/openai.yaml")\n\nR1_REQUIRED_FIELDS = (\n    "path",\n    "claim",\n    "initial_evidence",\n    "counter_evidence",\n    "result",\n    "reason",\n)\nR2_REQUIRED_FIELDS = (\n    "action",\n    "product_semantics",\n    "permission_or_security",\n    "test_selection",\n    "runtime_behavior",\n    "historical_decision",\n    "direct_consumer",\n    "result",\n)\n\n\ndef read_text(relative: Path) -> str:\n    path = ROOT / relative\n    if not path.is_file():\n        raise AssertionError(f"缺少文件: {relative.as_posix()}")\n    return path.read_text(encoding="utf-8")\n\n\ndef compact(text: str) -> str:\n    return "".join(text.split())\n\n\ndef validate_r1(\n    expected_paths: Iterable[str],\n    records: list[dict[str, str]],\n) -> list[str]:\n    issues: list[str] = []\n    expected = tuple(expected_paths)\n    actual = tuple(record.get("path", "") for record in records)\n    if set(actual) != set(expected) or len(actual) != len(expected):\n        issues.append("第一轮没有逐份覆盖固定文档集合")\n    for record in records:\n        path = record.get("path", "<unknown>")\n        for field in R1_REQUIRED_FIELDS:\n            if not record.get(field, "").strip():\n                issues.append(f"{path}: 缺少 R001 字段 {field}")\n        if record.get("initial_evidence") == record.get("counter_evidence"):\n            issues.append(f"{path}: 相反证据不得复用初审正向证据")\n        if record.get("result") not in {"改变", "未改变"}:\n            issues.append(f"{path}: result 必须是改变或未改变")\n    return issues\n\n\ndef validate_r2(\n    expected_actions: Iterable[str],\n    records: list[dict[str, str]],\n) -> list[str]:\n    issues: list[str] = []\n    expected = tuple(expected_actions)\n    actual = tuple(record.get("action", "") for record in records)\n    if set(actual) != set(expected) or len(actual) != len(expected):\n        issues.append("第二轮没有逐项覆盖固定动作集合")\n    for record in records:\n        action = record.get("action", "<unknown>")\n        for field in R2_REQUIRED_FIELDS:\n            if not record.get(field, "").strip():\n                issues.append(f"{action}: 缺少 R002 字段 {field}")\n        if record.get("result") not in {"通过", "修改", "撤销"}:\n            issues.append(f"{action}: result 必须是通过、修改或撤销")\n    return issues\n\n\nclass ProjectDocConsistencyCounterevidenceTest(unittest.TestCase):\n    def test_repository_contracts_pass(self) -> None:\n        skill = compact(read_text(SKILL_PATH))\n        reference = compact(read_text(REFERENCE_PATH))\n        shared = compact(read_text(SHARED_PATH))\n        agent = compact(read_text(AGENT_PATH))\n\n        required_skill = (\n            "SOURCE-PROVENANCE.json",\n            "verified",\n            "missing",\n            "mismatch",\n            "references/counterevidence-audit.md",\n            "四类跨载体扫描",\n            "可证伪主张",\n            "初审正向证据",\n            "不同角色的相反证据或邻接消费者",\n            "仓库外正式轨迹",\n            "不得询问保存",\n        )\n        required_reference = (\n            "初始状态与运行时转换",\n            "允许、禁止、退役合同与夹具",\n            "聚合入口与成员闭包",\n            "身份与操作粒度",\n            "数量相同不能代替成员闭包",\n            "同一source／lease／snapshot",\n            "N/N不变",\n            "失败关闭",\n        )\n        required_shared = (\n            "用户明确授权",\n            "仓库外正式轨迹",\n            "逐字追加",\n            "不得事后补造",\n        )\n        required_agent = (\n            "四类跨载体反证扫描",\n            "逐文档反证式Rxxx",\n            "SOURCE-PROVENANCE.json",\n        )\n        for token in required_skill:\n            self.assertIn(compact(token), skill, token)\n        for token in required_reference:\n            self.assertIn(compact(token), reference, token)\n        for token in required_shared:\n            self.assertIn(compact(token), shared, token)\n        for token in required_agent:\n            self.assertIn(compact(token), agent, token)\n\n    def test_grouped_or_self_confirming_r1_is_rejected(self) -> None:\n        issues = validate_r1(\n            ("S001", "S002"),\n            [\n                {\n                    "path": "S001-S002",\n                    "claim": "全部一致",\n                    "initial_evidence": "README",\n                    "counter_evidence": "README",\n                    "result": "未改变",\n                    "reason": "2/2 不变",\n                }\n            ],\n        )\n        self.assertTrue(\n            any("逐份覆盖" in issue for issue in issues),\n            issues,\n        )\n        self.assertTrue(\n            any("不得复用" in issue for issue in issues),\n            issues,\n        )\n\n    def test_per_document_adversarial_r1_is_accepted(self) -> None:\n        issues = validate_r1(\n            ("S001", "S002"),\n            [\n                {\n                    "path": "S001",\n                    "claim": "启动时选择后运行期不可切换",\n                    "initial_evidence": "需求表",\n                    "counter_evidence": "运行时切换 API",\n                    "result": "改变",\n                    "reason": "直接消费者允许双向热切换",\n                },\n                {\n                    "path": "S002",\n                    "claim": "run-all 调度全部声明成员",\n                    "initial_evidence": "命令表",\n                    "counter_evidence": "实际调度函数",\n                    "result": "未改变",\n                    "reason": "声明成员与实际调用闭包一致",\n                },\n            ],\n        )\n        self.assertEqual([], issues)\n\n    def test_r2_requires_each_safety_axis(self) -> None:\n        issues = validate_r2(\n            ("F001",),\n            [\n                {\n                    "action": "F001",\n                    "product_semantics": "不变",\n                    "permission_or_security": "",\n                    "test_selection": "不变",\n                    "runtime_behavior": "不变",\n                    "historical_decision": "不变",\n                    "direct_consumer": "README",\n                    "result": "通过",\n                }\n            ],\n        )\n        self.assertTrue(\n            any("permission_or_security" in issue for issue in issues),\n            issues,\n        )\n\n\nif __name__ == "__main__":\n    unittest.main()\n'
+
+          from __future__ import annotations
+
+          from pathlib import Path
+          from textwrap import dedent
+
+          ROOT = Path.cwd()
+
+
+          def read(path: str) -> str:
+              return (ROOT / path).read_text(encoding="utf-8")
+
+
+          def write(path: str, text: str) -> None:
+              target = ROOT / path
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_text(text, encoding="utf-8", newline="\n")
+
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              text = read(path)
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one match, got {count}: {old[:80]!r}")
+              write(path, text.replace(old, new, 1))
+
+
+          def insert_before(path: str, marker: str, addition: str) -> None:
+              text = read(path)
+              count = text.count(marker)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one marker, got {count}: {marker!r}")
+              write(path, text.replace(marker, addition + marker, 1))
+
+
+          def replace_between(path: str, start: str, end: str, replacement: str) -> None:
+              text = read(path)
+              start_index = text.find(start)
+              if start_index < 0:
+                  raise SystemExit(f"{path}: missing start marker: {start!r}")
+              body_start = start_index + len(start)
+              end_index = text.find(end, body_start)
+              if end_index < 0:
+                  raise SystemExit(f"{path}: missing end marker: {end!r}")
+              write(path, text[:body_start] + replacement + text[end_index:])
+
+
+          # project-doc-consistency/SKILL.md
+          insert_before(
+              "project-doc-consistency/SKILL.md",
+              "## 请求分流与只读边界\n",
+              dedent("""    ## Skill 来源身份
+
+              开始前检查本 Skill 同目录的 `SOURCE-PROVENANCE.json`：
+
+              - 存在时，按清单重新计算本 Skill、直接 references 与 `project-doc-shared` 文件 SHA-256，并记录
+                `verified` 或 `mismatch`；
+              - 缺失时记录 `missing`；
+              - `missing`／`mismatch` 不阻止只读审计，但报告和方案必须明确无法把本次行为归因到某个源提交，不得根据目录名、
+                本地文件时间或相似内容猜测版本；
+              - 用户明确要求某个版本的实仓验收时，只有 `verified` 才能把结果计入该版本。
+
+              """),
+          )
+          replace_once(
+              "project-doc-consistency/SKILL.md",
+              "停止，也不依赖不可见内部记忆。\n\n本 Skill 的每个正式审计分片必须承接下节规定的自然单元三项证据、文档级一致性处置，以及新增或改变的发现、\n",
+              "停止，也不依赖不可见内部记忆。\n\n"
+              "`full` 审计还必须完整读取\n"
+              "[`references/counterevidence-audit.md`](references/counterevidence-audit.md)，在普通自然单元审计后完成四类跨载体反证扫描。\n"
+              "用户已经明确授权仓库外正式轨迹时，按共享协议逐字追加 `S000`、`Axxx`、`Cnnn`、`Rxxx` 和累计尾部；未授权时不得\n"
+              "写文件。询问保存前，全部最终有效正式记录必须仍可从当前线程或该轨迹取得，缺失时只能标为 `未覆盖`。\n\n"
+              "本 Skill 的每个正式审计分片必须承接下节规定的自然单元三项证据、文档级一致性处置，以及新增或改变的发现、\n",
+          )
+          insert_before(
+              "project-doc-consistency/SKILL.md",
+              "若两处文字完全重复、实现细节镜像、过程快照或内容错位",
+              dedent("""    `full` 还必须在正式 `Axxx` 中单列四类跨载体扫描：
+
+              - 初始／启动／当前状态与运行时转换；
+              - 当前允许、禁止或已退役合同与正向／负向夹具；
+              - `all`、`run-all`、suite、manifest、expected 或 Registry 汇总与实际成员闭包；
+              - 同一 source／lease／snapshot 与同一请求／响应，以及普通操作与独立精确操作的区别。
+
+              每类都要记录被挑战声明、初审正向证据、不同角色的相反证据或邻接消费者，以及结论／残余；没有适用候选时也要写明
+              实际检查边界和不适用理由，不能只写“已搜索”或数量对账。
+
+              """),
+          )
+          replace_between(
+              "project-doc-consistency/SKILL.md",
+              "完整性门跨 `S000`、全部编号审计／纠正／评审分片、累计尾部和最终索引核对：\n\n",
+              "\n\n任一项缺失时",
+              dedent("""    1. Skill 来源状态已记录；版本验收场景必须为 `verified`；
+              2. 精确活动路径或内容种子与审计记录一一对应；
+              3. 每份长期文档的自然契约单元覆盖全部实质正文；
+              4. 每个单元都有三项证据或明确残余；
+              5. 每份活动文档都有文档级一致性处置和文档特定依据；
+              6. `full` 的四类跨载体扫描均有正式记录或具体不适用依据；
+              7. 高显著度发现没有终止其余成员、其余单元或另一轮检查；
+              8. 分片、累计尾部和下一指针连续；
+              9. 每项纠正精确替代旧记录，最终索引没有两个同时有效且互相冲突的结论；
+              10. 全部最终有效 `S000`／`Axxx`／`Cnnn`／`Rxxx` 可从当前线程或经授权的仓库外正式轨迹取得。
+
+              """),
+          )
+          replace_once(
+              "project-doc-consistency/SKILL.md",
+              "7. 适用时的测试契约发现、结构机械断言漂移和验证交接建议。\n",
+              "7. 适用时的测试契约发现、结构机械断言漂移和验证交接建议；\n"
+              "8. Skill provenance 的 `verified`／`missing`／`mismatch` 状态，以及正式记录是否可追溯。\n",
+          )
+          replace_between(
+              "project-doc-consistency/SKILL.md",
+              "用户只选择一轮时，同一轮同时完成下述两类记录；选择两轮及以上时：\n\n",
+              "\n\n评审轮次只有",
+              dedent("""    1. **查漏轮**：以进入评审时所有文档级 `一致` 结论为固定集合，逐份形成独立记录。每份必须写出可证伪主张、
+                 初审正向证据、与正向证据不同角色的相反证据或邻接消费者、`改变`／`未改变`，以及反证为何推翻或未推翻原结论。
+                 只有主张、证据角色和结论完全相同才可显式分组；即使分组，每条路径仍需独立命名和锚点。
+                 `N/N 不变`、`同前`、`原证据仍成立` 或按职责类别列名单均不能代替逐文档反证。
+              2. **防语义误改轮**：逐项检查当前候选中的全部一致性修正，包括第一轮后的变化。每项必须分别记录原权威合同、
+                 目标修正、一层直接消费者，以及产品语义、权限／安全边界、测试选择／分类／覆盖义务、运行行为和历史决定是否改变；
+                 每项结论为 `通过`、`修改` 或 `撤销`，一段综合说明不能替代逐轴结论。
+
+              """),
+          )
+
+          # 新反证 reference
+          write(
+              "project-doc-consistency/references/counterevidence-audit.md",
+              COUNTER_REF,
+          )
+
+          # shared trace contract
+          insert_before(
+              "project-doc-shared/references/long-audit-protocol.md",
+              "## 纠正分片 `Cnnn`\n",
+              dedent("""    ## 可选仓库外正式轨迹
+
+              只有用户明确授权时，内容 Skill 才可在目标仓库外创建一份本任务专用的 append-only 正式轨迹。`S000` 必须记录轨迹
+              绝对路径；之后每个正式 `S000`、`Axxx`、`Cnnn`、`Rxxx` 和累计可恢复尾部都逐字追加，不能只写摘要或事后回填。
+
+              轨迹不进入目标仓库、不加入 Git、不包含凭据、真实用户数据或原始运行现场，也不供另一任务继续审计。它只解决长任务
+              上下文压缩后正式记录不可检索的问题，不证明语义正确。未获授权时保持纯对话只读；保存方案前若正式记录既不在当前
+              线程可取得，也不在经授权的仓库外正式轨迹中，必须标为缺失，不得事后补造、不得把该轮计为完成。
+
+              """),
+          )
+
+          # agent prompt
+          write(
+              "project-doc-consistency/agents/openai.yaml",
+              dedent("""    interface:
+                display_name: "项目文档一致性检查与方案"
+                short_description: "只读核对活动文档的事实、契约、状态、所有权和直接消费者"
+                default_prompt: "使用 $project-doc-consistency 只做项目文档一致性检查；不要做内容收缩。开始时校验 SOURCE-PROVENANCE.json；full 必须完成四类跨载体反证扫描和逐文档反证式 Rxxx。若我只调用 Skill 或没有说清只要报告还是形成方案，先询问交付路线且不要开始项目调查；方案只在最终确认时保存并随后停止。"
+
+              policy:
+                allow_implicit_invocation: false
+              """),
+          )
+
+          # installer and tests
+          write(
+              "SoftwareTesting/doc_consistency/install_project_doc_skills.py",
+              INSTALLER_SCRIPT,
+          )
+          write(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py",
+              INSTALLER_TEST,
+          )
+          write(
+              "SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py",
+              COUNTER_TEST,
+          )
+
+          # Responsibilities test wiring
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              'TEST_CONTRACT_PATH = Path(\n    "project-doc-consistency/references/test-design-audit.md"\n)\n',
+              'TEST_CONTRACT_PATH = Path(\n    "project-doc-consistency/references/test-design-audit.md"\n)\n'
+              'COUNTEREVIDENCE_PATH = Path(\n    "project-doc-consistency/references/counterevidence-audit.md"\n)\n',
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              'SHARED_VALIDATION_LINK = (\n    "../project-doc-shared/references/validation-planning.md"\n)\n',
+              'SHARED_VALIDATION_LINK = (\n    "../project-doc-shared/references/validation-planning.md"\n)\n'
+              'COUNTEREVIDENCE_LINK = "references/counterevidence-audit.md"\n',
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              "    test_contract = read_required(root, TEST_CONTRACT_PATH, issues)\n",
+              "    test_contract = read_required(root, TEST_CONTRACT_PATH, issues)\n"
+              "    counterevidence = read_required(root, COUNTEREVIDENCE_PATH, issues)\n",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              '            "事后重建表格不能补记",\n',
+              '            "事后重建表格不能补记",\n'
+              '            COUNTEREVIDENCE_LINK,\n'
+              '            "SOURCE-PROVENANCE.json",\n'
+              '            "四类跨载体扫描",\n'
+              '            "可证伪主张",\n',
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              "    require_tokens(\n        issues,\n        TEST_CONTRACT_PATH.as_posix(),\n",
+              "    require_tokens(\n"
+              "        issues,\n"
+              "        COUNTEREVIDENCE_PATH.as_posix(),\n"
+              "        counterevidence,\n"
+              "        (\n"
+              '            "初始状态与运行时转换",\n'
+              '            "允许、禁止、退役合同与夹具",\n'
+              '            "聚合入口与成员闭包",\n'
+              '            "身份与操作粒度",\n'
+              '            "第一轮反证式查漏",\n'
+              '            "第二轮防语义误改",\n'
+              "        ),\n"
+              "    )\n"
+              "    require_tokens(\n"
+              "        issues,\n"
+              "        TEST_CONTRACT_PATH.as_posix(),\n",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              '            "不允许一个 Skill 自动调用另一个 Skill",\n',
+              '            "不允许一个 Skill 自动调用另一个 Skill",\n'
+              '            "仓库外正式轨迹",\n'
+              '            "不得事后补造",\n',
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py",
+              "                TEST_CONTRACT_PATH,\n                CONTRACTION_PATH,\n",
+              "                TEST_CONTRACT_PATH,\n"
+              "                COUNTEREVIDENCE_PATH,\n"
+              "                CONTRACTION_PATH,\n",
+          )
+
+          # README
+          replace_once(
+              "README.md",
+              "Skill 安装、commit、push、PR 和发布仍需分别取得明确授权。\n\n标准骨架路线",
+              "Skill 安装、commit、push、PR 和发布仍需分别取得明确授权。取得安装授权后，推荐使用：\n\n"
+              "```text\n"
+              "python -B -X utf8 SoftwareTesting/doc_consistency/install_project_doc_skills.py --apply --skills project-doc-consistency\n"
+              "```\n\n"
+              "安装器精确镜像目标目录，并在可调用 Skill 中生成 `SOURCE-PROVENANCE.json`；可用 `--verify-only` 复核源提交与逐文件\n"
+              "SHA-256。直接复制仍允许，但缺少或不匹配 provenance 时审计只能报告版本无法验证。\n\n"
+              "标准骨架路线",
+          )
+          replace_once(
+              "README.md",
+              "所有权，以及本仓库三个 Skill 的职责隔离合同。\n",
+              "所有权，以及本仓库三个 Skill 的职责隔离、consistency 反证审计和安装 provenance 合同。\n",
+          )
+
+          # SoftwareTesting README
+          replace_once(
+              "SoftwareTesting/doc_consistency/README.md",
+              "python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_contraction_confirmation.py\n",
+              "python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_contraction_confirmation.py\n"
+              "python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py\n"
+              "python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py\n",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/README.md",
+              "- 收缩方案与一致性方案不能混合；\n- 两个内容 Skill 不自动调用彼此。\n",
+              "- 收缩方案与一致性方案不能混合；\n"
+              "- consistency 的 `full` 必须完成四类跨载体反证扫描，第一轮不能用集合对账或初审正向证据自证；\n"
+              "- 安装器必须精确镜像并生成可验证 `SOURCE-PROVENANCE.json`，文件漂移要报告 `mismatch`；\n"
+              "- 两个内容 Skill 不自动调用彼此。\n",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/README.md",
+              "职责脚本包含一致性方案混入收缩动作、README 分层名义下删除重复内容、收缩 Skill 自行裁决事实冲突和同一方案混合\n两类动作等反例；交互脚本另外拒绝旧五字段前置提示，并确认 skeleton 的既有分流不受影响。反例必须被拒绝，正例必须通过。\n",
+              "职责脚本包含一致性方案混入收缩动作、README 分层名义下删除重复内容、收缩 Skill 自行裁决事实冲突和同一方案混合\n"
+              "两类动作等反例；交互脚本拒绝旧五字段前置提示；反证脚本拒绝按组 `N/N 不变`、复用正向证据和缺失防误改轴；安装器\n"
+              "脚本验证精确镜像、来源清单和文件漂移。反例必须被拒绝，正例必须通过。\n",
+          )
+          replace_once(
+              "SoftwareTesting/doc_consistency/README.md",
+              "四个命令都只读。",
+              "六个验证命令都只读。",
+          )
+
+          # docs requirement
+          replace_once(
+              "docs/需求文档.md",
+              "- 上下文压缩后只从 `S000` 和最近一个可见累计尾部恢复，不依赖不可见内部记忆或猜测。\n",
+              "- 上下文压缩后只从 `S000` 和最近一个可见累计尾部恢复，不依赖不可见内部记忆或猜测。\n"
+              "- 用户明确授权时，可把正式 `S000/Axxx/Cnnn/Rxxx` 逐字追加到目标仓库外的任务轨迹；未授权时不写文件。无论是否\n"
+              "  使用轨迹，保存方案前全部最终有效正式记录都必须可取得，缺失时不得事后补造或宣称完整。\n",
+          )
+          replace_once(
+              "docs/需求文档.md",
+              "- 先从当前入口确认活动真源所有者；所有权不清时停止内容审计并形成结构治理交接，不猜测真源。\n",
+              "- 先校验安装目录的 `SOURCE-PROVENANCE.json`，记录 `verified`、`missing` 或 `mismatch`；只有 `verified` 才能把\n"
+              "  实仓结果归因到某个源提交。随后从当前入口确认活动真源所有者；所有权不清时停止内容审计并形成结构治理交接。\n",
+          )
+          replace_once(
+              "docs/需求文档.md",
+              "- 必检需求、设计、字段契约、ADR、运维、待办、Registry、manifest、测试入口、实际注册、帮助／注释／配置和直接\n  消费者之间的当前含义与状态。\n",
+              "- 必检需求、设计、字段契约、ADR、运维、待办、Registry、manifest、测试入口、实际注册、帮助／注释／配置和直接\n"
+              "  消费者之间的当前含义与状态。\n"
+              "- `full` 还必须完成四类跨载体反证：初始状态与运行时转换、允许／禁止／退役合同与正负夹具、聚合入口与实际成员\n"
+              "  闭包、共享 source／lease 与请求／响应及普通／独立精确操作的粒度差异。\n",
+          )
+          replace_once(
+              "docs/需求文档.md",
+              "- 第一轮评审逐份挑战全部文档级 `一致` 结论，查漏事实、契约、状态、所有权、Registry 和消费者漂移；第二轮逐项\n  检查拟议一致性修正是否错误改变产品语义、权限、安全边界、测试选择、运行行为或历史决定。两轮必须在正式 `Rxxx` 中交付逐份／逐项记录，不能由最终摘要或事后审阅包补记。\n",
+              "- 第一轮评审逐份挑战全部文档级 `一致` 结论，每份必须记录可证伪主张、初审正向证据、不同角色的相反证据／邻接\n"
+              "  消费者及改变理由；`N/N 不变` 或职责分组名单不能替代。第二轮逐项显式记录产品语义、权限／安全、测试选择、运行\n"
+              "  行为、历史决定和直接消费者是否改变。两轮必须在正式 `Rxxx` 中交付，不能由最终摘要或事后审阅包补记。\n",
+          )
+          replace_once(
+              "docs/需求文档.md",
+              "- 三个 Skill 不创建项目级 profile、manifest、版本号、持久评审日志或运行账本；范围、累计尾部、纠正和编号报告\n  分片只存在于当前任务的可见交付，不写入目标仓库，也不供另一个任务续跑。\n",
+              "- 三个 Skill 不在目标项目创建 profile、版本号、持久评审日志或运行账本。安装器可在可调用 Skill 目录生成\n"
+              "  `SOURCE-PROVENANCE.json`；用户明确授权时可在目标仓库外保存本任务正式分片轨迹，但它不供另一任务续跑。\n",
+          )
+
+          # docs design
+          replace_once(
+              "docs/设计文档.md",
+              "project-doc-consistency/\n├── SKILL.md\n├── agents/openai.yaml\n└── references/\n    └── test-design-audit.md\n",
+              "project-doc-consistency/\n"
+              "├── SKILL.md\n"
+              "├── agents/openai.yaml\n"
+              "└── references/\n"
+              "    ├── counterevidence-audit.md\n"
+              "    └── test-design-audit.md\n",
+          )
+          replace_once(
+              "docs/设计文档.md",
+              "├── test_project_doc_skill_responsibilities.py\n└── test_project_doc_contraction_confirmation.py\n",
+              "├── install_project_doc_skills.py\n"
+              "├── test_project_doc_skill_responsibilities.py\n"
+              "├── test_project_doc_contraction_confirmation.py\n"
+              "├── test_project_doc_consistency_counterevidence.py\n"
+              "└── test_project_doc_skill_installer.py\n",
+          )
+          replace_once(
+              "docs/设计文档.md",
+              "| Consistency | `references/test-design-audit.md` | 声明绑定或 Registry 全局测试契约一致性，以及条件夹具与状态转换规则 |\n",
+              "| Consistency | `references/counterevidence-audit.md` | `full` 的四类跨载体反证、逐文档可证伪 R001 与逐轴 R002 失败关闭 |\n"
+              "| Consistency | `references/test-design-audit.md` | 声明绑定或 Registry 全局测试契约一致性，以及条件夹具与状态转换规则 |\n",
+          )
+          replace_between(
+              "docs/设计文档.md",
+              "## 一致性运行结构\n\n",
+              "\n\n## 收缩运行结构",
+              dedent("""    Consistency 启动时先校验安装目录的 `SOURCE-PROVENANCE.json`，将来源状态固定为 `verified`、`missing` 或
+              `mismatch`。之后以自然契约单元核对具体声明、当前所有者／直接证据和一致性结论。稳定一级职责章节至少各形成一个
+              单元，不得跨章合并成统一“静态吻合”；表格、清单、矩阵或映射中的独立值、所有者、状态、前提、例外和消费者也
+              分别形成单元。文档级处置只有 `一致`、`需要修正`、`无法核验`、`需要决策` 或 `未覆盖`。
+
+              `full` 在普通单元后执行四类跨载体扫描：时间／状态转换、允许／禁止／退役合同与夹具、聚合入口成员闭包，以及
+              source／lease 身份与请求／响应或普通／独立精确操作粒度。扫描正式进入 `Axxx`，不能只在最终摘要中补写。
+
+              Consistency 的发现只覆盖事实、契约、状态、所有权、Registry／入口和直接消费者。纯重复、镜像、过程或错位内容只
+              进入 `后续收缩候选`，不产生收缩动作。第一轮评审为每份 `一致` 文档记录可证伪主张、初审正向证据和不同角色的
+              相反／邻接证据；第二轮为每项修正逐轴记录产品语义、权限／安全、测试选择、运行行为、历史决定和直接消费者。
+              只有正式 `Rxxx` 中实际交付的记录可以计入轮次。
+
+              """),
+          )
+          replace_once(
+              "docs/设计文档.md",
+              "活跃上下文只镜像该尾部。\n",
+              "活跃上下文只镜像该尾部。用户明确授权时，正式分片还逐字追加到目标仓库外的 append-only 轨迹；保存前必须确认\n"
+              "最终有效记录仍可从线程或轨迹取得。\n",
+          )
+          replace_once(
+              "docs/设计文档.md",
+              "- 三个 Skill 不保存 profile、manifest、版本号、持久评审日志或上次运行结论；范围、累计尾部、纠正和编号报告分片\n  只构成当前任务的可见交付，不写入目标仓库，也不供另一个任务续跑。\n",
+              "- 三个 Skill 不在目标项目保存 profile、版本号、持久评审日志或上次运行结论。安装器在可调用 Skill 目录写\n"
+              "  `SOURCE-PROVENANCE.json`；用户明确授权时，正式分片可写到目标仓库外的任务轨迹，但不供另一任务续跑。\n",
+          )
+          replace_between(
+              "docs/设计文档.md",
+              "## 验证拓扑\n\n",
+              "\n\n## 架构决策记录",
+              dedent("""    当前验证分四层：
+
+              1. `SoftwareTesting/doc_consistency/` 的标准 T-DOC 和规则夹具检查活动入口、链接、生命周期、Registry、归档和顶层
+                 Markdown 根所有权。
+              2. `test_project_doc_skill_responsibilities.py` 检查三个 Skill 的显式调用、共享协议引用、职责隔离、
+                 `consistency_blocked` 和方案不混合反例。
+              3. `test_project_doc_contraction_confirmation.py` 检查 contraction 裸调用的当前 `HEAD` 默认、单次确认和 skeleton
+                 独立分流；`test_project_doc_consistency_counterevidence.py` 检查四类反证、逐文档 R001 和逐轴 R002。
+              4. `test_project_doc_skill_installer.py` 检查精确镜像、`SOURCE-PROVENANCE.json`、`verified`／`mismatch`／`missing`；
+                 `install_project_doc_skills.py` 是取得安装授权后的交付入口。
+              5. `SoftwareTesting/manual/project_doc_skills/` 的 `T-PROJECT-DOC-FORWARD` 是 `explicit` 前向试用，不作为普通机械完成门。
+
+              动态结果只由对应活动方案或归档记录承接，不在本设计文档维护。
+              """),
+          )
+
+          # docs registry
+          replace_once(
+              "docs/软件测试.md",
+              "检查标准文档骨架、活动方案生命周期、机械入口、顶层 Markdown 根所有权，以及三个项目文档 Skill 的职责隔离与 contraction 单次前置确认合同",
+              "检查标准文档骨架、活动方案生命周期、机械入口、顶层 Markdown 根所有权，以及三个项目文档 Skill 的职责隔离、consistency 反证评审、安装 provenance 与 contraction 单次前置确认合同",
+          )
+
+          print("patch applied")
+          PY
+
+      - name: Run repository validations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_contraction_confirmation.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py --workspace-root .
+          python -m py_compile \
+            SoftwareTesting/doc_consistency/install_project_doc_skills.py \
+            SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py \
+            SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py
+          git diff --check
+          git status --short
+
+      - name: Commit and push main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "9f0510ee92ea958d2a1a4988bb4ca957fad53a70"
+          git config user.name "OpenAI"
+          git config user.email "noreply@openai.com"
+          git add \
+            README.md \
+            docs/需求文档.md \
+            docs/设计文档.md \
+            docs/软件测试.md \
+            project-doc-consistency/SKILL.md \
+            project-doc-consistency/agents/openai.yaml \
+            project-doc-consistency/references/counterevidence-audit.md \
+            project-doc-shared/references/long-audit-protocol.md \
+            SoftwareTesting/doc_consistency/README.md \
+            SoftwareTesting/doc_consistency/install_project_doc_skills.py \
+            SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py \
+            SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py \
+            SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
+          git commit -m "补强一致性反证审计与安装追溯"
+          git push origin HEAD:main
