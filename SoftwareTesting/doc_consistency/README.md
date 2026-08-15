@@ -18,10 +18,11 @@
 python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
 ```
 
-随后运行本仓库的 Skill 职责隔离检查：
+随后运行本仓库的 Skill 职责隔离与交互检查：
 
 ```text
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
+python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_contraction_confirmation.py
 ```
 
 最后运行当前项目的 T-DOC：
@@ -44,11 +45,14 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py
 - consistency 与 contraction 都引用同一共享长审计协议，协议本身不拥有事实或内容处置；
 - consistency 只形成事实、契约、状态、所有权、Registry／入口和消费者修正，不生成删除或简化动作；
 - contraction 必须取得已验证一致性基线，遇到事实冲突使用 `consistency_blocked`，不得自行裁决；
+- contraction 裸调用只读识别当前 `HEAD`，默认 `full + 只读报告`，只问一次是否确认已完成一致性整改并做过验证，
+  不索要验证证据或五字段模板；
+- skeleton 保持自己原有的单一交付路线问题，不继承 contraction 的一致性前置；
 - 收缩方案与一致性方案不能混合；
 - 两个内容 Skill 不自动调用彼此。
 
-隔离脚本包含三类反例：一致性方案混入收缩动作、收缩 Skill 自行裁决事实冲突、同一方案混合两类动作。反例必须被
-拒绝，正例必须通过。
+职责脚本包含一致性方案混入收缩动作、README 分层名义下删除重复内容、收缩 Skill 自行裁决事实冲突和同一方案混合
+两类动作等反例；交互脚本另外拒绝旧五字段前置提示，并确认 skeleton 的既有分流不受影响。反例必须被拒绝，正例必须通过。
 
 任意层级的 `.agents/skills/**`、`.cursor/skills/**`、`.claude/skills/**`、`.codex/skills/**`、
 `.opencode/skills/**`、`.opencode/skill/**` 和 `.github/skills/**` 不接受通用 Markdown 检查；相邻工具目录内容和
@@ -71,5 +75,5 @@ T-DOC 不判断目标项目正文事实或收缩质量；职责隔离脚本只�
 
 ## 清理
 
-三个命令都只读。规则夹具和职责隔离反例只使用并自动清理系统临时目录，不创建项目测试根或产品进程，也不接触
+四个命令都只读。规则夹具和职责隔离反例只使用并自动清理系统临时目录，不创建项目测试根或产品进程，也不接触
 真实数据。

@@ -6,8 +6,8 @@
   明确要求时只保存方案，后续由普通任务实施。
 - [`project-doc-consistency`](project-doc-consistency/SKILL.md)：只读核对活动文档的事实、契约、状态、所有权和直接
   消费者；用户明确要求时只保存纯一致性方案。
-- [`project-doc-contraction`](project-doc-contraction/SKILL.md)：只在用户明确给出已完成一致性整改与验证的基线提交后，
-  只读审计重复、镜像、过程快照、职责错位和复杂内容；用户明确要求时只保存纯收缩方案。
+- [`project-doc-contraction`](project-doc-contraction/SKILL.md)：只在用户确认当前或指定的不可变提交已完成一致性整改并
+  做过一致性验证后，只读审计重复、镜像、过程快照、职责错位和复杂内容；裸调用默认识别当前 `HEAD`，只问一次确认。
 
 两个内容 Skill 共用的非可调用参考位于
 [`project-doc-shared`](project-doc-shared/README.md)。它只提供长审计恢复与验证规划，不包含 `SKILL.md`，也不让
