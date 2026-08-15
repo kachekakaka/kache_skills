@@ -1,0 +1,24 @@
+name: temp-project-doc-interaction-validation
+
+on:
+  push:
+    branches:
+      - agent/refine-doc-consistency-audit
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run repository-native validation
+        run: |
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_contraction_confirmation.py
+          python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py --workspace-root .
+          git diff --check origin/main...HEAD
