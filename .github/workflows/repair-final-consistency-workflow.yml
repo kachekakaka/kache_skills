@@ -1,0 +1,45 @@
+name: 修复临时一致性补强验证工作流
+
+on:
+  push:
+    branches:
+      - agent/final-consistency-hardening-20260816
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.head_commit.message != '修复临时一致性验证工作流'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/final-consistency-hardening-20260816
+          fetch-depth: 0
+
+      - name: Repair inline patch runner
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/final-consistency-hardening.yml')
+          text = path.read_text(encoding='utf-8')
+          old = "          python - <<'PY'\n"
+          new = "          sed '/^from __future__ import annotations$/d' <<'PY' | python\n"
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one runner line, got {text.count(old)}')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+          PY
+
+      - name: Commit repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "OpenAI"
+          git config user.email "noreply@openai.com"
+          git add .github/workflows/final-consistency-hardening.yml
+          git commit -m "修复临时一致性验证工作流"
+          git push origin HEAD:agent/final-consistency-hardening-20260816
