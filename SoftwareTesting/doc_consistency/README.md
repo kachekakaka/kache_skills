@@ -24,6 +24,7 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_contraction_confirmation.py
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_consistency_counterevidence.py
+python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_independent_review.py
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py
 ```
 
@@ -52,12 +53,14 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py
 - skeleton 保持自己原有的单一交付路线问题，不继承 contraction 的一致性前置；
 - 收缩方案与一致性方案不能混合；
 - consistency 的 `full` 必须完成四类跨载体反证扫描，第一轮不能用集合对账或初审正向证据自证；
+- 内部完整性门只产生 `audit_complete`；独立方案审阅才可产生 `implementation_ready`，并必须检查双向候选闭环、
+  过时事实阻断和 `Cnnn` 失效证据复用；
 - 安装器必须精确镜像并生成可验证 `SOURCE-PROVENANCE.json`，文件漂移要报告 `mismatch`；
 - 两个内容 Skill 不自动调用彼此。
 
 职责脚本包含一致性方案混入收缩动作、README 分层名义下删除重复内容、收缩 Skill 自行裁决事实冲突和同一方案混合
 两类动作等反例；交互脚本拒绝旧五字段前置提示；反证脚本拒绝按组 `N/N 不变`、复用正向证据和缺失防误改轴；安装器
-脚本验证精确镜像、来源清单和文件漂移。反例必须被拒绝，正例必须通过。
+脚本验证精确镜像、来源清单和文件漂移。反例必须被拒绝，正例必须通过；独立审阅脚本还拒绝原任务自批、未闭合候选、过时事实直接删除和失效证据复用。
 
 任意层级的 `.agents/skills/**`、`.cursor/skills/**`、`.claude/skills/**`、`.codex/skills/**`、
 `.opencode/skills/**`、`.opencode/skill/**` 和 `.github/skills/**` 不接受通用 Markdown 检查；相邻工具目录内容和
@@ -80,5 +83,5 @@ T-DOC 不判断目标项目正文事实或收缩质量；职责隔离脚本只�
 
 ## 清理
 
-六个验证命令都只读。规则夹具和职责隔离反例只使用并自动清理系统临时目录，不创建项目测试根或产品进程，也不接触
+七个验证命令都只读。规则夹具和职责隔离反例只使用并自动清理系统临时目录，不创建项目测试根或产品进程，也不接触
 真实数据。
