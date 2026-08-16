@@ -21,6 +21,9 @@ COUNTEREVIDENCE_PATH = Path(
 )
 CONTRACTION_PATH = Path("project-doc-contraction/SKILL.md")
 CONTRACTION_AGENT_PATH = Path("project-doc-contraction/agents/openai.yaml")
+CONTRACTION_CONTENT_PATH = Path(
+    "project-doc-contraction/references/content-contraction.md"
+)
 SHARED_PROTOCOL_PATH = Path(
     "project-doc-shared/references/long-audit-protocol.md"
 )
@@ -128,6 +131,9 @@ def collect_contract_issues(root: Path) -> list[str]:
     contraction_agent = read_required(
         root, CONTRACTION_AGENT_PATH, issues
     )
+    contraction_content = read_required(
+        root, CONTRACTION_CONTENT_PATH, issues
+    )
     shared = read_required(root, SHARED_PROTOCOL_PATH, issues)
     shared_validation = read_required(
         root, SHARED_VALIDATION_PATH, issues
@@ -216,6 +222,20 @@ def collect_contract_issues(root: Path) -> list[str]:
             "全部 `无需收缩` 文档",
             "防误伤轮",
             "不得自动调用",
+        ),
+    )
+    require_tokens(
+        issues,
+        CONTRACTION_CONTENT_PATH.as_posix(),
+        contraction_content,
+        (
+            "细节必要性与角色专项",
+            "篇幅只能触发深入检查，不能单独证明内容膨胀",
+            "需求夹带设计选择",
+            "`CONTEXT.md`／术语表",
+            "测试治理／测试说明文档",
+            "不得借收缩擅自改名、重定义术语或撤销测试义务",
+            "不评估测试覆盖是否充分、断言质量或可执行测试是否应删除",
         ),
     )
     require_tokens(
@@ -376,6 +396,7 @@ class ProjectDocSkillResponsibilityTest(unittest.TestCase):
                 COUNTEREVIDENCE_PATH,
                 CONTRACTION_PATH,
                 CONTRACTION_AGENT_PATH,
+                CONTRACTION_CONTENT_PATH,
                 SHARED_PROTOCOL_PATH,
                 SHARED_VALIDATION_PATH,
                 SPLIT_ADR_PATH,

@@ -50,6 +50,8 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py
 - contraction 必须取得已验证一致性基线，遇到事实冲突使用 `consistency_blocked`，不得自行裁决；
 - contraction 裸调用只读识别当前 `HEAD`，默认 `full + 只读报告`，只问一次是否确认已完成一致性整改并做过验证，
   不索要验证证据或五字段模板；
+- contraction 不以篇幅直接判定膨胀，必须检查细节必要性，并覆盖需求夹带设计、术语表越界／术语失真和测试类文档
+  失效残留，同时保持术语事实与测试义务的 `consistency_blocked` 边界；
 - skeleton 保持自己原有的单一交付路线问题，不继承 contraction 的一致性前置；
 - 收缩方案与一致性方案不能混合；
 - consistency 的 `full` 必须完成四类跨载体反证扫描，第一轮不能用集合对账或初审正向证据自证；
