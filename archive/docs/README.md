@@ -46,3 +46,4 @@
 | [长期文档全量语义审计与收缩复核补强方案](2026-08-15-PROJECT-DOC-CONSISTENCY-EXHAUSTIVE-REVIEW-20260815-长期文档全量语义审计与收缩复核补强方案.md) | 记录全部实质内容双遍覆盖、重复与声明漂移检查、无需收缩负向证明、查漏／防误伤 review 及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [长期文档可见覆盖证据与复核有效性补强方案](2026-08-15-PROJECT-DOC-CONSISTENCY-VISIBLE-COVERAGE-20260815-长期文档可见覆盖证据与复核有效性补强方案.md) | 记录逐长期文档可见覆盖条目、集合式无需收缩禁令、查漏／防误伤复核证据及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [骨架最小充分测试与正式认证收缩方案](2026-08-28-SKELETON-TEST-CAPABILITY-CONTRACTION-20260828-骨架最小充分测试与正式认证收缩方案.md) | 记录最小充分完整测试与正式认证边界、T-DOC 按直接输入选择、单次剪枝清单优化和普通验证 | [标准测试治理基线](../../project-doc-skeleton/references/testing-baseline.md) |
+| [骨架治理精简方案](2026-08-28-PROJECT-DOC-SKELETON-GOVERNANCE-SLIM-20260828-骨架治理精简方案.md) | 记录生命周期、四类收尾、项目文档 Skill 交互、最小充分验证、T-DOC 活动／归档组件和证据清理规则的实施结果 | [标准骨架规则](../../project-doc-skeleton/references/skeleton-rules.md) |

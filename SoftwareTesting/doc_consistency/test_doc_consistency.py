@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""只读检查项目文档骨架、实际导航、生命周期、Registry 和归档。"""
+"""按组件只读检查项目文档骨架、实际导航、生命周期、Registry 和归档。"""
 
 from __future__ import annotations
 
@@ -83,18 +83,21 @@ TOP_LEVEL_OWNER_FILES = (
     "SoftwareTesting/README.md",
 )
 STANDARD_TOP_LEVEL_ROOTS = frozenset({"SoftwareTesting", "archive", "docs"})
-MACHINE_FILES = (
+ACTIVE_MACHINE_FILES = (
     "AGENTS.md",
     "README.md",
     "docs/README.md",
     "docs/已知问题与待做需求.md",
     "docs/软件测试.md",
     "SoftwareTesting/README.md",
+)
+ARCHIVE_MACHINE_FILES = (
     "archive/docs/README.md",
     "archive/SoftwareTesting/README.md",
 )
+COMPONENTS = frozenset({"active", "archive", "all"})
 ALLOWED_BACKLOG_STATUSES = {"待确认", "待实施", "实施中", "暂缓"}
-ALLOWED_PLAN_STATUSES = {"待确认", "实施中"}
+ALLOWED_PLAN_STATUSES = {"待确认", "待实施", "实施中"}
 PLAN_FIELDS = ("测试层级", "验证影响域", "具体验证项")
 TEST_CATEGORIES = {"full", "affected_only", "explicit"}
 BACKLOG_HEADING_RE = re.compile(
@@ -149,10 +152,13 @@ def _is_within(path: Path, parent: Path) -> bool:
     return candidate == boundary or boundary in candidate.parents
 
 
-@lru_cache(maxsize=None)
-def _all_markdown(root: Path) -> tuple[Path, ...]:
+def _markdown_under(root: Path, scan_root: Path) -> tuple[Path, ...]:
     files: list[Path] = []
-    for current, directories, names in os.walk(root, topdown=True, followlinks=False):
+    if not scan_root.is_dir():
+        return ()
+    for current, directories, names in os.walk(
+        scan_root, topdown=True, followlinks=False
+    ):
         current_path = Path(current)
         directories[:] = sorted(
             name
@@ -172,17 +178,40 @@ def _all_markdown(root: Path) -> tuple[Path, ...]:
 
 @lru_cache(maxsize=None)
 def _active_markdown(root: Path) -> tuple[Path, ...]:
-    return tuple(path for path in _all_markdown(root) if not _is_archive(path, root))
+    files: list[Path] = []
+    for current, directories, names in os.walk(root, topdown=True, followlinks=False):
+        current_path = Path(current)
+        directories[:] = sorted(
+            name
+            for name in directories
+            if not (
+                current_path == root and name == "archive"
+            )
+            and not _ignored(current_path / name, root)
+        )
+        for name in sorted(names):
+            path = current_path / name
+            if (
+                path.suffix.lower() == ".md"
+                and path.is_file()
+                and not _ignored(path, root)
+            ):
+                files.append(path)
+    return tuple(sorted(files))
 
 
 @lru_cache(maxsize=None)
-def _checked_markdown(root: Path) -> tuple[Path, ...]:
-    files = list(_active_markdown(root))
-    for relative in ("archive/docs/README.md", "archive/SoftwareTesting/README.md"):
-        path = root / relative
-        if path.is_file():
-            files.append(path)
-    return tuple(sorted(set(files)))
+def _archive_markdown(root: Path, relative: str) -> tuple[Path, ...]:
+    return _markdown_under(root, root / relative)
+
+
+@lru_cache(maxsize=None)
+def _archive_indexes(root: Path) -> tuple[Path, ...]:
+    return tuple(
+        root / relative
+        for relative in ("archive/docs/README.md", "archive/SoftwareTesting/README.md")
+        if _is_exact_file(root, relative)
+    )
 
 
 def _strip_fenced_code(content: str) -> str:
@@ -330,7 +359,7 @@ def _check_context_shape(root: Path, errors: list[str]) -> None:
         errors.append("CONTEXT-MAP.md: 本骨架只支持单一上下文项目")
     nested = sorted(
         path
-        for path in _all_markdown(root)
+        for path in _active_markdown(root)
         if path.name == "CONTEXT.md" and path != root / "CONTEXT.md"
     )
     for path in nested:
@@ -339,15 +368,22 @@ def _check_context_shape(root: Path, errors: list[str]) -> None:
         )
 
 
-def _check_markdown_files(root: Path, errors: list[str]) -> None:
-    for path in _checked_markdown(root):
+def _check_markdown_files(
+    root: Path,
+    paths: tuple[Path, ...],
+    errors: list[str],
+    *,
+    archive_indexes: bool = False,
+) -> None:
+    for path in paths:
         relative = path.relative_to(root).as_posix()
         raw, read_error = _read_bytes(path)
         if raw is None:
             errors.append(f"{relative}: 无法读取 Markdown: {read_error}")
             continue
         if b"\r" in raw:
-            errors.append(f"{relative}: 活动 Markdown 和归档索引必须使用 LF")
+            scope = "归档索引" if archive_indexes else "活动 Markdown"
+            errors.append(f"{relative}: {scope} 必须使用 LF")
         content = _read_text(path)
         if content is None:
             errors.append(f"{relative}: 必须是有效 UTF-8")
@@ -356,7 +392,12 @@ def _check_markdown_files(root: Path, errors: list[str]) -> None:
             if not target.exists():
                 errors.append(f"{relative}: 链接目标不存在: {destination}")
                 continue
-            if fragment and target.is_file() and target.suffix.lower() == ".md":
+            if (
+                fragment
+                and target.is_file()
+                and target.suffix.lower() == ".md"
+                and (archive_indexes or not _is_archive(target, root))
+            ):
                 slugs = _heading_slugs(target)
                 if slugs is None:
                     continue
@@ -654,9 +695,10 @@ def _check_plans(
             errors.append(f"docs/方案/: 待办 {item_id} 存在多份活动方案")
     for item_id, status in sorted(backlog.items()):
         count = len(by_id.get(item_id, []))
-        if status == "实施中" and count != 1:
+        if status in {"待实施", "实施中"} and count != 1:
             errors.append(
-                f"docs/方案/: 实施中待办 {item_id} 必须有且只有一份活动方案"
+                f"docs/方案/: 状态为“{status}”的待办 {item_id} "
+                "必须有且只有一份活动方案"
             )
         if status not in ALLOWED_PLAN_STATUSES and count:
             errors.append(
@@ -806,13 +848,23 @@ def _archive_table(
     return rows
 
 
-def _check_archive_area(root: Path, relative: str, errors: list[str]) -> None:
+def _check_archive_area(
+    root: Path,
+    relative: str,
+    errors: list[str],
+    *,
+    required: bool = False,
+) -> None:
     archive_root = root / relative
     if not archive_root.exists():
+        if required:
+            errors.append(f"{relative}/README.md: 缺少名称与大小写完全匹配的必需文件")
         return
     index = archive_root / "README.md"
-    if not index.is_file():
-        errors.append(f"{relative}/README.md: 归档目录缺少索引")
+    if not _is_exact_file(root, f"{relative}/README.md"):
+        errors.append(
+            f"{relative}/README.md: 归档目录缺少名称与大小写完全匹配的索引"
+        )
         return
 
     rows = _archive_table(index, errors, root)
@@ -866,7 +918,7 @@ def _check_archive_area(root: Path, relative: str, errors: list[str]) -> None:
     counts = Counter(target.resolve(strict=False) for target in targets)
     archived = sorted(
         path
-        for path in _all_markdown(root)
+        for path in _archive_markdown(root, relative)
         if path != index and archive_root in path.parents
     )
     for path in archived:
@@ -908,8 +960,12 @@ def _check_archive_navigation(root: Path, errors: list[str]) -> None:
                 )
 
 
-def _check_machine_syntax(root: Path, warnings: list[str]) -> None:
-    for relative in MACHINE_FILES:
+def _check_machine_syntax(
+    root: Path,
+    relatives: tuple[str, ...],
+    warnings: list[str],
+) -> None:
+    for relative in relatives:
         path = root / relative
         content = _read_text(path)
         if content is None:
@@ -970,14 +1026,56 @@ def _check_navigation_overlap(root: Path, warnings: list[str]) -> None:
     )
 
 
+def _collect_active(
+    workspace: Path,
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    _check_required(workspace, errors)
+    _check_context_shape(workspace, errors)
+    _check_markdown_files(workspace, _active_markdown(workspace), errors)
+    _check_navigation(workspace, errors)
+    _check_docs_reachability(workspace, errors)
+    _check_top_level_markdown_ownership(workspace, errors)
+    _check_suite_navigation(workspace, errors)
+    backlog, backlog_plan_targets = _parse_backlog(workspace, errors)
+    _check_plans(workspace, backlog, backlog_plan_targets, errors)
+    entries = _parse_registry(workspace, errors)
+    _check_suite_registry(workspace, entries, errors)
+    _check_archive_navigation(workspace, errors)
+    _check_machine_syntax(workspace, ACTIVE_MACHINE_FILES, warnings)
+    _check_absolute_paths(workspace, warnings)
+    _check_navigation_overlap(workspace, warnings)
+
+
+def _collect_archive(
+    workspace: Path,
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    _check_markdown_files(
+        workspace,
+        _archive_indexes(workspace),
+        errors,
+        archive_indexes=True,
+    )
+    _check_archive_area(workspace, "archive/docs", errors, required=True)
+    _check_archive_area(workspace, "archive/SoftwareTesting", errors)
+    _check_machine_syntax(workspace, ARCHIVE_MACHINE_FILES, warnings)
+
+
 def collect_doc_consistency(
     root: Path | None = None,
+    component: str = "all",
 ) -> tuple[list[str], list[str]]:
+    if component not in COMPONENTS:
+        choices = ", ".join(("active", "archive", "all"))
+        raise ValueError(f"未知组件 {component!r}；可选值：{choices}")
     workspace = (root or Path(__file__).resolve().parents[2]).resolve()
     for cached in (
-        _all_markdown,
         _active_markdown,
-        _checked_markdown,
+        _archive_markdown,
+        _archive_indexes,
         _heading_slugs,
         _read_bytes,
         _read_text,
@@ -987,31 +1085,23 @@ def collect_doc_consistency(
         cached.cache_clear()
     errors: list[str] = []
     warnings: list[str] = []
-    _check_required(workspace, errors)
-    _check_context_shape(workspace, errors)
-    _check_markdown_files(workspace, errors)
-    _check_navigation(workspace, errors)
-    _check_docs_reachability(workspace, errors)
-    _check_top_level_markdown_ownership(workspace, errors)
-    _check_suite_navigation(workspace, errors)
-    backlog, backlog_plan_targets = _parse_backlog(workspace, errors)
-    _check_plans(workspace, backlog, backlog_plan_targets, errors)
-    entries = _parse_registry(workspace, errors)
-    _check_suite_registry(workspace, entries, errors)
-    _check_archive_area(workspace, "archive/docs", errors)
-    _check_archive_area(workspace, "archive/SoftwareTesting", errors)
-    _check_archive_navigation(workspace, errors)
-    _check_machine_syntax(workspace, warnings)
-    _check_absolute_paths(workspace, warnings)
-    _check_navigation_overlap(workspace, warnings)
+    if component in {"active", "all"}:
+        _collect_active(workspace, errors, warnings)
+    if component in {"archive", "all"}:
+        _collect_archive(workspace, errors, warnings)
     return errors, warnings
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace-root", type=Path)
+    parser.add_argument(
+        "--component",
+        choices=("active", "archive", "all"),
+        default="all",
+    )
     args = parser.parse_args()
-    errors, warnings = collect_doc_consistency(args.workspace_root)
+    errors, warnings = collect_doc_consistency(args.workspace_root, args.component)
     for warning in warnings:
         print(f"[WARN] {warning}")
     if errors:

@@ -22,20 +22,28 @@ CONTRACTION_REQUIRED = (
     "不要求用户粘贴验证日志",
     "缺少验证日志本身不是阻断理由",
     "不得再单独追问基线、范围或交付路线",
-    "默认“两轮、不生成”",
+    "方案路线不预问评审轮数",
+    "候选默认完成一次有界评审",
+    "每轮评审同时完成下述两类记录",
+    "已经明确要求保存且候选稳定时不重复确认",
 )
 
 CONTRACTION_AGENT_REQUIRED = (
     "当前 HEAD",
     "只问一句",
-    "回复“确认”即可",
-    "不索要验证证据",
-    "默认两轮、不生成反哺",
+    "确认已完成整改与验证",
+    "不索要日志",
+    "方案默认评审一次",
+    "最多追加一轮",
+    "已明确要求保存",
+    "直接一次保存",
 )
 
 OBSOLETE_BURDENS = (
     "明确列出仍为 `not_run` 但不影响内容真值的边界",
     "未明确基线／交付路线时，先询问缺失项",
+    "默认“两轮、不生成”",
+    "反哺报告",
 )
 
 SKELETON_REQUIRED = (
@@ -76,6 +84,8 @@ def collect_issues(root: Path) -> list[str]:
     for token in OBSOLETE_BURDENS:
         if compact(token) in contraction_compact:
             issues.append(f"{CONTRACTION_SKILL.as_posix()}: 仍保留旧多字段负担 {token!r}")
+        if compact(token) in contraction_agent_compact:
+            issues.append(f"{CONTRACTION_AGENT.as_posix()}: 仍保留旧交互负担 {token!r}")
     for token in SKELETON_REQUIRED:
         if compact(token) not in skeleton_compact:
             issues.append(f"{SKELETON_SKILL.as_posix()}: 缺少既有独立分流合同 {token!r}")

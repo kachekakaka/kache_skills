@@ -56,7 +56,7 @@ BASE_FILES = {
 
 ## FEATURE-001：示例能力
 
-- 状态：待实施
+- 状态：待确认
 """,
     "docs/软件测试.md": """\
 # 软件测试
@@ -122,8 +122,8 @@ class DocConsistencyRulesTest(unittest.TestCase):
         self.assertIn(old, content)
         self.write(relative, content.replace(old, new))
 
-    def issues(self) -> tuple[list[str], list[str]]:
-        return collect_doc_consistency(self.root)
+    def issues(self, component: str = "all") -> tuple[list[str], list[str]]:
+        return collect_doc_consistency(self.root, component)
 
     def assert_has(self, issues: list[str], expected: str) -> None:
         self.assertTrue(
@@ -131,8 +131,8 @@ class DocConsistencyRulesTest(unittest.TestCase):
             f"未发现包含 {expected!r} 的问题：{issues}",
         )
 
-    def assert_clean(self) -> None:
-        errors, warnings = self.issues()
+    def assert_clean(self, component: str = "all") -> None:
+        errors, warnings = self.issues(component)
         self.assertEqual([], errors)
         self.assertEqual([], warnings)
 
@@ -228,7 +228,7 @@ class DocConsistencyRulesTest(unittest.TestCase):
 
         errors, _ = self.issues()
 
-        self.assert_has(errors, "docs/需求文档.md: 活动 Markdown 和归档索引必须使用 LF")
+        self.assert_has(errors, "docs/需求文档.md: 活动 Markdown 必须使用 LF")
         self.assert_has(errors, "docs/设计文档.md: 必须是有效 UTF-8")
 
     def test_project_skill_assets_are_excluded_without_broadening_scope(self) -> None:
@@ -441,7 +441,6 @@ C:\\Users\\example\\project
         self.assert_clean()
 
     def test_pending_item_may_have_no_plan_or_one_plan(self) -> None:
-        self.replace("docs/已知问题与待做需求.md", "待实施", "待确认")
         self.assert_clean()
 
         self.add_valid_plan("待确认")
@@ -470,9 +469,12 @@ C:\\Users\\example\\project
         self.assert_has(errors, "待办 FEATURE-001 存在多份活动方案")
 
     def test_plan_lifecycle_link_and_fields_are_enforced(self) -> None:
-        self.replace("docs/已知问题与待做需求.md", "待实施", "实施中")
+        self.replace("docs/已知问题与待做需求.md", "待确认", "实施中")
         errors, _ = self.issues()
-        self.assert_has(errors, "实施中待办 FEATURE-001 必须有且只有一份活动方案")
+        self.assert_has(
+            errors,
+            "状态为“实施中”的待办 FEATURE-001 必须有且只有一份活动方案",
+        )
 
         self.add_valid_plan()
         self.replace(
@@ -513,21 +515,27 @@ C:\\Users\\example\\project
 
         self.assert_has(errors, "必须由对应待办条目实际链接")
 
-    def test_waiting_or_paused_item_must_not_have_active_plan(self) -> None:
-        for status in ("待实施", "暂缓"):
-            with self.subTest(status=status):
-                self.add_valid_plan(status)
+    def test_ready_item_requires_plan_and_paused_item_rejects_plan(self) -> None:
+        self.replace("docs/已知问题与待做需求.md", "待确认", "待实施")
+        errors, _ = self.issues()
+        self.assert_has(
+            errors,
+            "状态为“待实施”的待办 FEATURE-001 必须有且只有一份活动方案",
+        )
 
-                errors, _ = self.issues()
+        self.add_valid_plan("待实施")
+        self.assert_clean()
 
-                self.assert_has(
-                    errors,
-                    f"对应待办 FEATURE-001 的状态“{status}”不允许活动方案",
-                )
-                self.assert_has(
-                    errors,
-                    f"状态为“{status}”的待办 FEATURE-001 不得有活动方案",
-                )
+        self.add_valid_plan("暂缓")
+        errors, _ = self.issues()
+        self.assert_has(
+            errors,
+            "对应待办 FEATURE-001 的状态“暂缓”不允许活动方案",
+        )
+        self.assert_has(
+            errors,
+            "状态为“暂缓”的待办 FEATURE-001 不得有活动方案",
+        )
 
     def test_registry_requires_valid_unique_ids_categories_and_t_doc(self) -> None:
         self.write(
@@ -556,18 +564,20 @@ C:\\Users\\example\\project
 
     def test_archive_document_requires_one_valid_index_entry(self) -> None:
         self.write("archive/docs/旧设计.md", "# 旧设计\n")
-        errors, _ = self.issues()
+        self.assert_clean("active")
+        errors, _ = self.issues("archive")
         self.assert_has(errors, "archive/docs/旧设计.md: 必须由归档索引恰好登记一次，实际 0")
 
         self.add_valid_archive()
-        self.assert_clean()
+        self.assert_clean("archive")
+        self.assert_clean("all")
 
         self.write(
             "archive/docs/README.md",
             self.read("archive/docs/README.md")
             + "| [旧设计副本](旧设计.md) | 重复记录 | 无，仅保留历史证据 |\n",
         )
-        errors, _ = self.issues()
+        errors, _ = self.issues("archive")
         self.assert_has(errors, "archive/docs/旧设计.md: 归档索引重复登记 2 次")
 
     def test_archive_current_source_must_be_active_project_markdown(self) -> None:
@@ -682,21 +692,28 @@ C:\\Users\\example\\project
         self.assert_clean()
 
     def test_cli_exit_code_matches_result(self) -> None:
-        passed = subprocess.run(
-            [
-                sys.executable,
-                "-B",
-                "-X",
-                "utf8",
-                str(SCRIPT),
-                "--workspace-root",
-                str(self.root),
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(0, passed.returncode, passed.stdout + passed.stderr)
+        with self.assertRaises(ValueError):
+            self.issues("invalid")
+
+        for component in ("active", "archive", "all"):
+            with self.subTest(component=component):
+                passed = subprocess.run(
+                    [
+                        sys.executable,
+                        "-B",
+                        "-X",
+                        "utf8",
+                        str(SCRIPT),
+                        "--workspace-root",
+                        str(self.root),
+                        "--component",
+                        component,
+                    ],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(0, passed.returncode, passed.stdout + passed.stderr)
 
         (self.root / "docs" / "需求文档.md").unlink()
         failed = subprocess.run(
@@ -708,6 +725,8 @@ C:\\Users\\example\\project
                 str(SCRIPT),
                 "--workspace-root",
                 str(self.root),
+                "--component",
+                "active",
             ],
             check=False,
             capture_output=True,

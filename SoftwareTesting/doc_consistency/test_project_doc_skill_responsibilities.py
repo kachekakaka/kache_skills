@@ -151,6 +151,8 @@ def collect_contract_issues(root: Path) -> list[str]:
                 "name: project-doc-skeleton",
                 "仅在用户显式调用 $project-doc-skeleton",
                 "不要调用、依赖或假定其他 Skill 已安装",
+                "候选默认完成一次有界评审",
+                "已经明确要求保存且",
             ),
         )
     require_tokens(
@@ -176,6 +178,8 @@ def collect_contract_issues(root: Path) -> list[str]:
             "SOURCE-PROVENANCE.json",
             "四类跨载体扫描",
             "可证伪主张",
+            "候选默认完成一次有界评审",
+            "已经明确要求保存且",
         ),
     )
     require_tokens(
@@ -222,6 +226,8 @@ def collect_contract_issues(root: Path) -> list[str]:
             "全部 `无需收缩` 文档",
             "防误伤轮",
             "不得自动调用",
+            "候选默认完成一次有界评审",
+            "已经明确要求保存且",
         ),
     )
     require_tokens(
@@ -296,6 +302,20 @@ def collect_contract_issues(root: Path) -> list[str]:
         issues.append(
             f"{CONTRACTION_PATH.as_posix()}: 不得恢复一致性或测试设计审计"
         )
+
+    forbidden_delivery = "反哺报告"
+    for relative, text in (
+        (SKELETON_PATH, skeleton),
+        (SKELETON_AGENT_PATH, skeleton_agent),
+        (CONSISTENCY_PATH, consistency),
+        (CONSISTENCY_AGENT_PATH, consistency_agent),
+        (CONTRACTION_PATH, contraction),
+        (CONTRACTION_AGENT_PATH, contraction_agent),
+    ):
+        if forbidden_delivery in text:
+            issues.append(
+                f"{relative.as_posix()}: 不得恢复已退出的额外过程交付物"
+            )
     if any(
         token in shared
         for token in (
@@ -336,7 +356,10 @@ def collect_contract_issues(root: Path) -> list[str]:
         issues.append(
             f"{CONSISTENCY_AGENT_PATH.as_posix()}: 默认提示必须隔离收缩"
         )
-    if "已经完成一致性整改与验证的基线提交" not in contraction_agent:
+    if (
+        "一致性基线候选" not in contraction_agent
+        or "确认已完成整改与验证" not in contraction_agent
+    ):
         issues.append(
             f"{CONTRACTION_AGENT_PATH.as_posix()}: 默认提示必须要求一致性基线"
         )

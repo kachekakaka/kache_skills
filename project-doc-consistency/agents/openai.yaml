@@ -1,7 +1,7 @@
 interface:
   display_name: "项目文档一致性检查与方案"
   short_description: "只读核对活动文档的事实、契约、状态、所有权和直接消费者"
-  default_prompt: "使用 $project-doc-consistency 只做项目文档一致性检查；不要做内容收缩。开始时校验 SOURCE-PROVENANCE.json；full 必须完成四类跨载体反证扫描的双向清单、候选闭环和逐文档反证式 Rxxx。明确要求独立审阅已保存方案时，不重跑 full，不继承原任务结论，只判断 implementation_ready、needs_revision 或 blocked。若我只调用 Skill 或没有说清只要报告还是形成方案，先询问交付路线且不要开始项目调查；方案只在最终确认时保存并随后停止。"
+  default_prompt: "使用 $project-doc-consistency 只做项目文档一致性检查；不要做内容收缩。开始时校验 SOURCE-PROVENANCE.json；full 完成四类跨载体反证和候选闭环。方案默认评审一次，实质修订后最多追加一轮；我已明确要求保存且最终候选没有漂移时直接一次保存，否则保存前再问，随后停止。"
 
 policy:
   allow_implicit_invocation: false

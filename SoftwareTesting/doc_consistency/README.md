@@ -4,7 +4,8 @@
 - 执行类别：`affected_only`
 - 触发条件：门禁或本仓库职责组件的直接输入相对实施开始时冻结的候选基线发生变化；无法可靠形成变更集合、不能证明
   直接输入未变或已有证据失效时执行对应组件。与这些输入无关的产品源码变化本身不触发 T-DOC。
-- 输入：当前标准骨架工作区的活动 Markdown、归档索引和固定路径；精确排除任意层级标准项目级 Skill 根中的
+- 输入：`active` 读取当前标准骨架工作区的活动 Markdown 和固定活动路径，不枚举归档正文；`archive` 只读取精确
+  归档根、归档索引和登记关系；`all` 合并两者且为兼容默认值。各组件都精确排除任意层级标准项目级 Skill 根中的
   工具资产，不排除相邻工具目录内容或其他位置的 `SKILL.md`。本仓库额外读取三个 Skill 及共享参考。
 - fixture：骨架门禁资产使用脚本内置隔离夹具；职责隔离检查同时包含仓库真实合同和内置正反例。
 - 工作目录：仓库根目录。
@@ -21,11 +22,13 @@
 python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
 ```
 
-活动 Markdown、归档索引、固定结构、Registry、门禁说明或实现等目标门禁直接输入变化时，运行当前项目的 T-DOC。实施
-任务完成待办退出、方案归档、索引更新或空条件目录清理后，对最终候选运行一次；只有失败修复或直接输入再次变化才重跑：
+普通活动文档变化使用 `active`；归档、恢复归档或归档路径／索引变化使用 `archive`；两类输入同时变化或进行生命周期
+最终关闭时使用 `all`。未指定组件时默认为 `all`；只有失败修复或相应直接输入再次变化才重跑：
 
 ```text
-python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py
+python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py --component active
+python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py --component archive
+python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py --component all
 ```
 
 本仓库的五个职责命令分别按其脚本和直接读取合同选择：
@@ -49,13 +52,15 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_install
 
 ## 断言
 
-标准门禁机械检查固定路径与大小写、UTF-8 与 LF、相对链接和标题锚点、必要入口、两跳可达性、待办／方案生命周期、
-四列测试 Registry 及归档登记。标准根、归档和已排除路径之外，含活动 Markdown 的顶层目录必须由根 README、
-项目文档入口或测试总入口直接链接目录内的 Markdown 所有者入口。
+`active` 机械检查固定活动路径与大小写、活动 Markdown 的 UTF-8 与 LF、相对链接和标题锚点、必要入口、两跳可达性、
+待办／方案生命周期、四列测试 Registry 和活动导航边界；它可以确认归档索引路径存在，但不解析归档表或枚举归档正文。
+`archive` 只检查归档索引格式、登记唯一性、当前承接和精确归档正文集合；`all` 合并两者。标准根、归档和已排除路径
+之外，含活动 Markdown 的顶层目录必须由根 README、项目文档入口或测试总入口直接链接目录内的 Markdown 所有者入口。
 
 本仓库职责隔离检查额外确认：
 
 - 三个 Skill 只能显式调用；
+- 三个 Skill 及其界面元数据不得恢复已退出的额外过程交付物；方案默认一次有界评审，只有实质修订才追加一轮；
 - consistency 与 contraction 都引用同一共享长审计协议，协议本身不拥有事实或内容处置；
 - consistency 只形成事实、契约、状态、所有权、Registry／入口和消费者修正，不生成删除或简化动作；
 - contraction 必须取得已验证一致性基线，遇到事实冲突使用 `consistency_blocked`，不得自行裁决；
@@ -72,13 +77,14 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_install
 - 两个内容 Skill 不自动调用彼此。
 
 职责脚本包含一致性方案混入收缩动作、README 分层名义下删除重复内容、收缩 Skill 自行裁决事实冲突和同一方案混合
-两类动作等反例；交互脚本拒绝旧五字段前置提示；反证脚本拒绝按组 `N/N 不变`、复用正向证据和缺失防误改轴；安装器
+两类动作等反例，并拒绝已退出的额外过程交付物；交互脚本拒绝旧五字段与固定评审前置提示；反证脚本拒绝按组
+`N/N 不变`、复用正向证据和缺失防误改轴；安装器
 脚本验证精确镜像、来源清单和文件漂移。反例必须被拒绝，正例必须通过；独立审阅脚本还拒绝原任务自批、未闭合候选、过时事实直接删除和失效证据复用。
 
 任意层级的 `.agents/skills/**`、`.cursor/skills/**`、`.claude/skills/**`、`.codex/skills/**`、
 `.opencode/skills/**`、`.opencode/skill/**` 和 `.github/skills/**` 不接受通用 Markdown 检查；相邻工具目录内容和
-其他位置的 `SKILL.md` 仍按原规则检查。`待确认` 待办可以没有方案或链接一份方案，`实施中` 待办必须链接一份方案，
-其他活动状态不得保留方案；任一待办最多一份。根 README 与 `docs/README.md` 直接链接至少三份相同专题 Markdown
+其他位置的 `SKILL.md` 仍按原规则检查。`待确认` 待办可以没有方案或链接一份方案；`待实施` 和 `实施中` 待办必须
+各链接一份方案；`暂缓` 不得保留方案，任一待办最多一份。根 README 与 `docs/README.md` 直接链接至少三份相同专题 Markdown
 时给出重复导航 warning。
 
 T-DOC 不判断目标项目正文事实或收缩质量；职责隔离脚本只检查本仓库 Skill 合同，不替代真实项目审计。
@@ -91,8 +97,8 @@ T-DOC 不判断目标项目正文事实或收缩质量；职责隔离脚本只�
 - `inconclusive`：命令被中断或运行器内部异常，输出不足以判断。
 - `not_run`：命令没有执行；静态检查或其他替代证据不能把本项改写为 `passed`。
 
-结果只绑定命令执行时的工作区。待办退出、方案归档、索引更新或空条件目录清理会改变目标门禁直接输入；生命周期关闭后
-对最终状态运行一次目标门禁，施工中途结果不能替代最终状态结论。
+结果只绑定命令执行时的工作区。待办退出、方案归档、索引更新或空条件目录清理会同时改变活动与归档输入；生命周期
+关闭后使用 `all` 对最终状态运行一次，施工中途结果不能替代最终状态结论。
 
 ## 清理
 
