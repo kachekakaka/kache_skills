@@ -1,24 +1,34 @@
 # 文档机械门禁
 
 - Registry ID：`T-DOC`
-- 执行类别：`full`
-- 触发条件：本仓库或采用标准骨架的目标项目，其文档骨架、入口、链接、生命周期、Registry、归档结构或本仓库
-  项目文档 Skill 职责发生变化；全量测试时始终执行。
+- 执行类别：`affected_only`
+- 触发条件：门禁或本仓库职责组件的直接输入相对实施开始时冻结的候选基线发生变化；无法可靠形成变更集合、不能证明
+  直接输入未变或已有证据失效时执行对应组件。与这些输入无关的产品源码变化本身不触发 T-DOC。
 - 输入：当前标准骨架工作区的活动 Markdown、归档索引和固定路径；精确排除任意层级标准项目级 Skill 根中的
   工具资产，不排除相邻工具目录内容或其他位置的 `SKILL.md`。本仓库额外读取三个 Skill 及共享参考。
 - fixture：骨架门禁资产使用脚本内置隔离夹具；职责隔离检查同时包含仓库真实合同和内置正反例。
 - 工作目录：仓库根目录。
 - 环境条件：环境预置 `python`，仅使用 Python 标准库。
 
-## 规范命令
+## 规范命令与选择
 
-安装或更新门禁资产时先运行规则夹具：
+以下七个命令是独立能力入口，不是每次选择 T-DOC 后都要执行的固定并集。只运行本候选直接触发的组件，未选择命令据实
+保持 `not_run`。
+
+门禁说明、实现、规则夹具或机械规则合同变化时运行规则夹具：
 
 ```text
 python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency_rules.py
 ```
 
-随后运行本仓库的 Skill 职责隔离与交互检查：
+活动 Markdown、归档索引、固定结构、Registry、门禁说明或实现等目标门禁直接输入变化时，运行当前项目的 T-DOC。实施
+任务完成待办退出、方案归档、索引更新或空条件目录清理后，对最终候选运行一次；只有失败修复或直接输入再次变化才重跑：
+
+```text
+python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py
+```
+
+本仓库的五个职责命令分别按其脚本和直接读取合同选择：
 
 ```text
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
@@ -28,13 +38,14 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_independent_r
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py
 ```
 
-最后运行当前项目的 T-DOC：
+- Skeleton 源或三个 Skill 的职责隔离合同变化时，选择 `test_project_doc_skill_responsibilities.py`。
+- contraction 的裸调用／单次确认合同或与其直接相连的 Skeleton 分流合同变化时，选择
+  `test_project_doc_contraction_confirmation.py`。
+- consistency 的跨载体反证合同变化时，选择 `test_project_doc_consistency_counterevidence.py`。
+- 独立方案审阅合同或其直接消费者变化时，选择 `test_project_doc_independent_review.py`。
+- 安装器、来源清单、镜像源集合或 provenance 合同变化时，选择 `test_project_doc_skill_installer.py`。
 
-```text
-python -B -X utf8 SoftwareTesting/doc_consistency/test_doc_consistency.py
-```
-
-采用标准骨架但不包含本仓库三个 Skill 的目标项目只需要前后两个标准命令；中间命令是本仓库特有机械合同。
+采用标准骨架但不包含本仓库三个 Skill 的目标项目只保留规则夹具和目标门禁两个标准能力入口，也按各自直接输入选择。
 
 ## 断言
 
@@ -74,14 +85,14 @@ T-DOC 不判断目标项目正文事实或收缩质量；职责隔离脚本只�
 
 ## 结果语义
 
-- `passed`：当前要求执行的命令均以退出码 0 完成。
+- `passed`：本候选实际选择的命令均以退出码 0 完成；未受影响命令保持 `not_run`，不机械并入结论。
 - `failed`：命令已进入可判定阶段，并报告机械不一致或夹具断言失败。
 - `blocked`：`python` 或必要只读文件不可用，命令未进入可判定阶段。
 - `inconclusive`：命令被中断或运行器内部异常，输出不足以判断。
 - `not_run`：命令没有执行；静态检查或其他替代证据不能把本项改写为 `passed`。
 
-结果只绑定命令执行时的工作区。待办退出、方案归档、索引更新或空条件目录清理会形成新候选；生命周期关闭后必须
-对最终状态重新运行本门禁，施工中途结果不能替代最终状态结论。
+结果只绑定命令执行时的工作区。待办退出、方案归档、索引更新或空条件目录清理会改变目标门禁直接输入；生命周期关闭后
+对最终状态运行一次目标门禁，施工中途结果不能替代最终状态结论。
 
 ## 清理
 

@@ -63,7 +63,7 @@ BASE_FILES = {
 
 | ID | 执行类别 | 入口 | 唯一职责 |
 | --- | --- | --- | --- |
-| T-DOC | full | [文档一致性](../SoftwareTesting/doc_consistency/README.md) | 检查文档骨架与入口 |
+| T-DOC | affected_only | [文档一致性](../SoftwareTesting/doc_consistency/README.md) | 检查文档骨架与入口 |
 """,
     "SoftwareTesting/README.md": """\
 # 测试入口
@@ -537,7 +537,7 @@ C:\\Users\\example\\project
 
 | ID | 执行类别 | 入口 | 唯一职责 |
 | --- | --- | --- | --- |
-| T-DOC | affected_only | [错误入口](../SoftwareTesting/README.md) | 错误示例 |
+| T-DOC | full | [错误入口](../SoftwareTesting/README.md) | 错误示例 |
 | T-DOC | sometimes | [重复入口](../SoftwareTesting/doc_consistency/README.md) | 重复示例 |
 | invalid | full | [非法 ID](../SoftwareTesting/doc_consistency/README.md) | 非法示例 |
 """,
@@ -548,7 +548,7 @@ C:\\Users\\example\\project
         self.assert_has(errors, "测试项 ID 重复: T-DOC")
         self.assert_has(errors, "非法执行类别: sometimes")
         self.assert_has(errors, "非法测试项 ID: invalid")
-        self.assert_has(errors, "T-DOC 的执行类别必须是 full")
+        self.assert_has(errors, "T-DOC 的执行类别必须是 affected_only")
         self.assert_has(
             errors,
             "T-DOC 必须指向 SoftwareTesting/doc_consistency/README.md",

@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 import unicodedata
 from collections import Counter, deque
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -147,27 +149,40 @@ def _is_within(path: Path, parent: Path) -> bool:
     return candidate == boundary or boundary in candidate.parents
 
 
-def _all_markdown(root: Path) -> list[Path]:
-    return sorted(
-        path
-        for path in root.rglob("*")
-        if path.is_file()
-        and path.suffix.lower() == ".md"
-        and not _ignored(path, root)
-    )
+@lru_cache(maxsize=None)
+def _all_markdown(root: Path) -> tuple[Path, ...]:
+    files: list[Path] = []
+    for current, directories, names in os.walk(root, topdown=True, followlinks=False):
+        current_path = Path(current)
+        directories[:] = sorted(
+            name
+            for name in directories
+            if not _ignored(current_path / name, root)
+        )
+        for name in sorted(names):
+            path = current_path / name
+            if (
+                path.suffix.lower() == ".md"
+                and path.is_file()
+                and not _ignored(path, root)
+            ):
+                files.append(path)
+    return tuple(sorted(files))
 
 
-def _active_markdown(root: Path) -> list[Path]:
-    return [path for path in _all_markdown(root) if not _is_archive(path, root)]
+@lru_cache(maxsize=None)
+def _active_markdown(root: Path) -> tuple[Path, ...]:
+    return tuple(path for path in _all_markdown(root) if not _is_archive(path, root))
 
 
-def _checked_markdown(root: Path) -> list[Path]:
-    files = _active_markdown(root)
+@lru_cache(maxsize=None)
+def _checked_markdown(root: Path) -> tuple[Path, ...]:
+    files = list(_active_markdown(root))
     for relative in ("archive/docs/README.md", "archive/SoftwareTesting/README.md"):
         path = root / relative
         if path.is_file():
             files.append(path)
-    return sorted(set(files))
+    return tuple(sorted(set(files)))
 
 
 def _strip_fenced_code(content: str) -> str:
@@ -209,10 +224,13 @@ def _slug_base(heading: str) -> str:
     return re.sub(r"\s+", "-", "".join(kept))
 
 
-def _heading_slugs(path: Path) -> set[str]:
+@lru_cache(maxsize=None)
+def _heading_slugs(path: Path) -> frozenset[str] | None:
     seen: dict[str, int] = {}
     result: set[str] = set()
-    content = path.read_text(encoding="utf-8")
+    content = _read_text(path)
+    if content is None:
+        return None
     for line in _strip_fenced_code(content).splitlines():
         match = HEADING_RE.match(line)
         if not match:
@@ -222,7 +240,7 @@ def _heading_slugs(path: Path) -> set[str]:
         slug = base if index == 0 else f"{base}-{index}"
         seen[base] = index + 1
         result.add(slug)
-    return result
+    return frozenset(result)
 
 
 def _split_destination(raw: str) -> tuple[str, str]:
@@ -274,11 +292,31 @@ def _is_exact_file(root: Path, relative: str) -> bool:
     return current.is_file()
 
 
-def _read_text(path: Path) -> str | None:
+@lru_cache(maxsize=None)
+def _read_bytes(path: Path) -> tuple[bytes | None, str | None]:
     try:
-        return path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+        return path.read_bytes(), None
+    except OSError as exc:
+        return None, str(exc)
+
+
+@lru_cache(maxsize=None)
+def _read_text(path: Path) -> str | None:
+    raw, read_error = _read_bytes(path)
+    if raw is None or read_error is not None:
         return None
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+@lru_cache(maxsize=None)
+def _path_links(path: Path) -> tuple[tuple[str, Path, str], ...]:
+    content = _read_text(path)
+    if content is None:
+        return ()
+    return tuple(_local_links(content, path))
 
 
 def _check_required(root: Path, errors: list[str]) -> None:
@@ -292,10 +330,8 @@ def _check_context_shape(root: Path, errors: list[str]) -> None:
         errors.append("CONTEXT-MAP.md: 本骨架只支持单一上下文项目")
     nested = sorted(
         path
-        for path in root.rglob("CONTEXT.md")
-        if path.is_file()
-        and path != root / "CONTEXT.md"
-        and not _ignored(path, root)
+        for path in _all_markdown(root)
+        if path.name == "CONTEXT.md" and path != root / "CONTEXT.md"
     )
     for path in nested:
         errors.append(
@@ -304,41 +340,34 @@ def _check_context_shape(root: Path, errors: list[str]) -> None:
 
 
 def _check_markdown_files(root: Path, errors: list[str]) -> None:
-    slug_cache: dict[Path, set[str]] = {}
     for path in _checked_markdown(root):
         relative = path.relative_to(root).as_posix()
-        try:
-            raw = path.read_bytes()
-        except OSError as exc:
-            errors.append(f"{relative}: 无法读取 Markdown: {exc}")
+        raw, read_error = _read_bytes(path)
+        if raw is None:
+            errors.append(f"{relative}: 无法读取 Markdown: {read_error}")
             continue
         if b"\r" in raw:
             errors.append(f"{relative}: 活动 Markdown 和归档索引必须使用 LF")
-        try:
-            content = raw.decode("utf-8")
-        except UnicodeDecodeError:
+        content = _read_text(path)
+        if content is None:
             errors.append(f"{relative}: 必须是有效 UTF-8")
             continue
-        for destination, target, fragment in _local_links(content, path):
+        for destination, target, fragment in _path_links(path):
             if not target.exists():
                 errors.append(f"{relative}: 链接目标不存在: {destination}")
                 continue
             if fragment and target.is_file() and target.suffix.lower() == ".md":
-                try:
-                    slugs = slug_cache.setdefault(target, _heading_slugs(target))
-                except (OSError, UnicodeDecodeError):
+                slugs = _heading_slugs(target)
+                if slugs is None:
                     continue
                 if fragment not in slugs:
                     errors.append(f"{relative}: 标题锚点不存在: {destination}")
 
 
 def _direct_targets(path: Path) -> set[Path]:
-    content = _read_text(path)
-    if content is None:
-        return set()
     return {
         target.resolve(strict=False)
-        for _, target, _ in _local_links(content, path)
+        for _, target, _ in _path_links(path)
     }
 
 
@@ -357,7 +386,7 @@ def _check_navigation(root: Path, errors: list[str]) -> None:
         content = _read_text(source)
         if content is None:
             continue
-        links = _local_links(content, source)
+        links = _path_links(source)
         if source_relative == "README.md":
             agents = (root / "AGENTS.md").resolve(strict=False)
             if any(linked_target == agents for _, linked_target, _ in links):
@@ -385,7 +414,7 @@ def _markdown_graph(root: Path) -> dict[Path, set[Path]]:
         content = _read_text(path)
         targets: set[Path] = set()
         if content is not None:
-            for _, target, _ in _local_links(content, path):
+            for _, target, _ in _path_links(path):
                 candidate = target
                 if candidate.is_dir():
                     candidate = candidate / "README.md"
@@ -423,8 +452,8 @@ def _check_docs_reachability(root: Path, errors: list[str]) -> None:
         return
     graph = _markdown_graph(root)
     reached = _reachable_within(graph, index, 2)
-    for path in sorted(docs_root.rglob("*.md")):
-        if path == index or _ignored(path, root):
+    for path in _active_markdown(root):
+        if path == index or docs_root not in path.parents:
             continue
         if path.resolve(strict=False) not in reached:
             errors.append(
@@ -450,7 +479,7 @@ def _check_top_level_markdown_ownership(root: Path, errors: list[str]) -> None:
             continue
         owner_targets.update(
             target.resolve(strict=False)
-            for _, target, _ in _local_links(content, owner)
+            for _, target, _ in _path_links(owner)
             if target.is_file() and target.suffix.lower() == ".md"
         )
 
@@ -464,15 +493,18 @@ def _check_top_level_markdown_ownership(root: Path, errors: list[str]) -> None:
         )
 
 
-def _suite_readmes(root: Path) -> list[Path]:
+@lru_cache(maxsize=None)
+def _suite_readmes(root: Path) -> tuple[Path, ...]:
     testing_root = root / "SoftwareTesting"
     if not testing_root.is_dir():
-        return []
-    return sorted(
+        return ()
+    return tuple(sorted(
         path
-        for path in testing_root.rglob("README.md")
-        if path != testing_root / "README.md" and not _ignored(path, root)
-    )
+        for path in _active_markdown(root)
+        if path.name == "README.md"
+        and path != testing_root / "README.md"
+        and testing_root in path.parents
+    ))
 
 
 def _check_suite_navigation(root: Path, errors: list[str]) -> None:
@@ -709,8 +741,8 @@ def _parse_registry(
     if doc_entry is None:
         errors.append("docs/软件测试.md: Registry 缺少必需测试项 T-DOC")
     else:
-        if doc_entry[0] != "full":
-            errors.append("docs/软件测试.md: T-DOC 的执行类别必须是 full")
+        if doc_entry[0] != "affected_only":
+            errors.append("docs/软件测试.md: T-DOC 的执行类别必须是 affected_only")
         if doc_entry[1].resolve(strict=False) != expected_doc_target:
             errors.append(
                 "docs/软件测试.md: T-DOC 必须指向 "
@@ -834,8 +866,8 @@ def _check_archive_area(root: Path, relative: str, errors: list[str]) -> None:
     counts = Counter(target.resolve(strict=False) for target in targets)
     archived = sorted(
         path
-        for path in archive_root.rglob("*.md")
-        if path != index and not _ignored(path, root)
+        for path in _all_markdown(root)
+        if path != index and archive_root in path.parents
     )
     for path in archived:
         count = counts[path.resolve(strict=False)]
@@ -869,7 +901,7 @@ def _check_archive_navigation(root: Path, errors: list[str]) -> None:
         content = _read_text(path)
         if content is None:
             continue
-        for raw, target, _ in _local_links(content, path):
+        for raw, target, _ in _path_links(path):
             if _is_archive(target, root) and target not in allowed:
                 errors.append(
                     f"{relative}: 活动导航不得直接链接归档正文: {raw}"
@@ -942,6 +974,17 @@ def collect_doc_consistency(
     root: Path | None = None,
 ) -> tuple[list[str], list[str]]:
     workspace = (root or Path(__file__).resolve().parents[2]).resolve()
+    for cached in (
+        _all_markdown,
+        _active_markdown,
+        _checked_markdown,
+        _heading_slugs,
+        _read_bytes,
+        _read_text,
+        _path_links,
+        _suite_readmes,
+    ):
+        cached.cache_clear()
     errors: list[str] = []
     warnings: list[str] = []
     _check_required(workspace, errors)
