@@ -17,8 +17,8 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_markdown_links.py
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_responsibilities.py
 ```
 
-该入口检查三个 Skill 的名称、显式调用策略、自包含目录和无共享运行包。它不匹配生成文案、固定段落、源码 Token、
-文件行数、测试数量或耗时；真实模型行为由可选隔离样例观察。
+该入口检查三个 Skill 的名称、显式调用策略，以及运行入口的本地依赖没有逃出各自包。它不禁止整个支持文件目录类别，
+也不匹配生成文案、固定段落、源码 Token、文件行数、测试数量或耗时；真实模型行为由可选隔离样例观察。
 
 ## 安装器
 
@@ -26,7 +26,7 @@ python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_respons
 python -B -X utf8 SoftwareTesting/doc_consistency/test_project_doc_skill_installer.py
 ```
 
-该入口只在临时目录验证每个 Skill 独立镜像、陈旧目标清理以及来源清单的 `verified`、`mismatch` 和 `missing` 结果，
-不安装个人 Skill。
+该入口只在临时目录分别验证三个受支持 Skill 的单包精确镜像、陈旧目标清理以及来源清单的 `verified`、`mismatch` 和
+`missing` 结果，不锁定内部映射容器，也不安装个人 Skill。
 
 三个命令都属于普通、只读或临时目录验证。只运行本次变更直接影响的入口；未运行项保持 `not_run`。

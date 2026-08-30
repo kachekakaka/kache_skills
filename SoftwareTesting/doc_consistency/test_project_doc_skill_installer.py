@@ -19,6 +19,12 @@ if SPEC is None or SPEC.loader is None:
 INSTALLER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(INSTALLER)
 
+SUPPORTED_SKILLS = (
+    "project-doc-consistency",
+    "project-doc-contraction",
+    "project-doc-skeleton",
+)
+
 
 def make_skill(source: Path, name: str) -> None:
     (source / name / "agents").mkdir(parents=True)
@@ -42,29 +48,29 @@ METADATA = {
 
 
 class ProjectDocSkillInstallerTest(unittest.TestCase):
-    def test_each_skill_has_only_its_own_install_root(self) -> None:
-        for skill_name, roots in INSTALLER.SKILL_ROOTS.items():
-            with self.subTest(skill=skill_name):
-                self.assertEqual((skill_name,), roots)
-
     def test_exact_independent_mirror_and_provenance(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            source = root / "source"
-            target = root / "target"
-            skill_name = "project-doc-consistency"
-            make_skill(source, skill_name)
-            (target / skill_name).mkdir(parents=True)
-            (target / skill_name / "stale.txt").write_text("stale\n", encoding="utf-8")
+        for skill_name in SUPPORTED_SKILLS:
+            with self.subTest(skill=skill_name), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                source = root / "source"
+                target = root / "target"
+                make_skill(source, skill_name)
+                (target / skill_name).mkdir(parents=True)
+                (target / skill_name / "stale.txt").write_text(
+                    "stale\n", encoding="utf-8"
+                )
 
-            results = INSTALLER.install(source, target, (skill_name,), METADATA)
+                results = INSTALLER.install(source, target, (skill_name,), METADATA)
 
-            self.assertEqual("verified", results[0]["state"])
-            self.assertFalse((target / skill_name / "stale.txt").exists())
-            self.assertFalse((target / "project-doc-shared").exists())
-            manifest_path = target / skill_name / "SOURCE-PROVENANCE.json"
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            self.assertEqual([skill_name], manifest["roots"])
+                self.assertEqual("verified", results[0]["state"])
+                self.assertFalse((target / skill_name / "stale.txt").exists())
+                self.assertEqual(
+                    [skill_name],
+                    sorted(path.name for path in target.iterdir() if path.is_dir()),
+                )
+                manifest_path = target / skill_name / "SOURCE-PROVENANCE.json"
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                self.assertEqual([skill_name], manifest["roots"])
 
     def test_modified_installed_file_is_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

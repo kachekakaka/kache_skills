@@ -3,7 +3,7 @@
 - 状态：已完成
 - 保存日期：2026-08-08
 - 主责：两个项目文档 Skill 新增或修订方案时的评审轮次、用户决策与最终保存停点
-- 决策依据：[项目术语](../../CONTEXT.md)、[ADR-0009：方案候选先评审后一次保存](../../docs/adr/0009-review-plan-candidate-before-saving.md)
+- 决策依据：[项目术语](../../CONTEXT.md)、[ADR-0009：方案候选先评审后一次保存](adr/0009-review-plan-candidate-before-saving.md)
 - 实施授权：用户已明确授权按本方案实施，覆盖确定文件、普通验证、完整五样本 `T-PROJECT-DOC-FORWARD`、结果记录
   和完成条件满足后的生命周期关闭。Skill 安装、Git 写入、全量测试和正式认证不在范围。
 

@@ -4,6 +4,7 @@
 
 | 归档文档 | 历史职责 | 当前承接真源 |
 | --- | --- | --- |
+| [早期与被替代 ADR](adr/) | 保留 ADR-0001～ADR-0006、ADR-0008～ADR-0014 的当时决定、替代关系和设计语境 | [架构决策记录](../../docs/设计文档.md#架构决策记录) |
 | [骨架 Skill 职责收缩施工方案](2026-08-03-DOC-SKELETON-RESPONSIBILITY-REFACTOR-骨架职责收缩施工.md) | 记录 skeleton 第一阶段的职责收缩决定、施工边界和验收前验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [一致性 Skill 职责收缩施工方案](2026-08-03-DOC-CONSISTENCY-RESPONSIBILITY-REFACTOR-一致性职责收缩施工.md) | 记录 consistency 的职责收缩、三阶段授权、收尾字段和验收前验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [骨架 Skill 授权流程收敛方案](2026-08-03-SKELETON-AUTH-FLOW-20260803-骨架Skill授权流程收敛方案.md) | 记录 skeleton 的合并授权申请、同任务授权差额、条件关闭和项目级收尾契约 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
@@ -33,18 +34,19 @@
 | [HG 项目历史工作记录旧索引](其他项目的工作记录/hg_workspace/README.md) | 记录 HG 项目两份历史工作记录的旧子索引 | 无，仅保留历史证据 |
 | [当前项目骨架残余收口方案](2026-08-08-DOC-SKELETON-RESIDUAL-20260808-当前项目骨架残余收口方案.md) | 记录外部项目历史归档、根入口收缩、三份 T-DOC 资产和顶层 Markdown 根所有权门禁的实施与普通验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [T-DOC 入口契约与安装漂移收口方案](DOC-TDOC-ENTRY-CONTRACT-20260808-T-DOC入口契约与安装漂移收口方案.md) | 记录 T-DOC 标准 Skill 根边界的一处设计事实修订、范围收缩 review 和普通验证 | [设计文档](../../docs/设计文档.md) |
-| [方案候选评审与保存停点实施方案](2026-08-08-PROJECT-DOC-PLAN-REVIEW-20260808-方案候选评审与保存停点实施方案.md) | 记录两个项目文档 Skill 的用户选定评审轮数、调用内自修订、冻结发现集合对账、最终保存确认及五样本前向验证 | [ADR-0009](../../docs/adr/0009-review-plan-candidate-before-saving.md) |
+| [方案候选评审与保存停点实施方案](2026-08-08-PROJECT-DOC-PLAN-REVIEW-20260808-方案候选评审与保存停点实施方案.md) | 记录两个项目文档 Skill 的用户选定评审轮数、调用内自修订、冻结发现集合对账、最终保存确认及五样本前向验证 | [ADR-0009](adr/0009-review-plan-candidate-before-saving.md) |
 | [Python 文本验证运行编码方案](2026-08-09-SKELETON-PYTHON-UTF8-VALIDATION-20260809-Python文本验证运行编码方案.md) | 记录 skeleton 新规划 Python 文本验证入口的显式 UTF-8 就绪约束、严格失败语义及普通验证 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [用户拍板交互白话化与决策门槛收口方案](2026-08-09-PROJECT-DOC-DECISION-UX-20260809-用户拍板交互白话化与决策门槛收口方案.md) | 记录两个项目文档 Skill 的白话决策卡、证据裁决门槛、短回复协议及五样本迭代验收 | [项目术语](../../CONTEXT.md) |
 | [F2 project-doc-skeleton 改进建议报告](F2-DOC-SKELETON-01-project-doc-skeleton改进建议-20260810.md) | 记录外部 F2 项目测试资产骨架治理后的可迁移经验与通用 Skill 改进建议 | [project-doc-skeleton](../../project-doc-skeleton/SKILL.md) |
 | [F2 project-doc-consistency 改进建议报告](F2-DOC-CONSISTENCY-01-project-doc-consistency改进建议-20260810.md) | 记录外部 F2 项目文档与验证身份治理后的可迁移经验与通用 Skill 改进建议 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
-| [F2 治理经验吸纳与授权语义收口方案](2026-08-11-PROJECT-DOC-F2-LEARNINGS-20260811-F2治理经验吸纳与授权语义收口方案.md) | 记录两份 F2 报告的逐项取舍、两个 Skill 的请求分流、资产与验证证据改造、普通验证和生命周期关闭 | [ADR-0010](../../docs/adr/0010-route-report-plan-and-separate-action-authorization.md) |
+| [F2 治理经验吸纳与授权语义收口方案](2026-08-11-PROJECT-DOC-F2-LEARNINGS-20260811-F2治理经验吸纳与授权语义收口方案.md) | 记录两份 F2 报告的逐项取舍、两个 Skill 的请求分流、资产与验证证据改造、普通验证和生命周期关闭 | [ADR-0010](adr/0010-route-report-plan-and-separate-action-authorization.md) |
 | [完整审计收缩覆盖硬门收口方案](2026-08-12-PROJECT-DOC-CONSISTENCY-CONTRACTION-GATE-20260812-完整审计收缩覆盖硬门收口方案.md) | 记录逐文档双遍集合硬门、内容收缩判据、精确名称决定补强及完整五样本前向验收 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [活动项目文档真源收缩方案](2026-08-13-DOC-ACTIVE-TRUTH-CONTRACTION-20260813-活动项目文档真源收缩方案.md) | 记录当前项目需求、设计、术语、生命周期和测试说明的活动真源收缩，ADR 状态补强、普通验证及生命周期关闭 | [项目文档](../../docs/README.md) |
-| [裸调用交付路线确认方案](2026-08-13-PROJECT-DOC-ROUTE-CONFIRMATION-20260813-裸调用交付路线确认方案.md) | 记录两个项目文档 Skill 裸调用先确认报告／方案路线、合同与元数据同步、普通验证，以及接受显式前向矩阵 `not_run` 残余后的生命周期关闭 | [ADR-0011](../../docs/adr/0011-ask-delivery-route-before-auditing-ambiguous-invocations.md) |
+| [裸调用交付路线确认方案](2026-08-13-PROJECT-DOC-ROUTE-CONFIRMATION-20260813-裸调用交付路线确认方案.md) | 记录两个项目文档 Skill 裸调用先确认报告／方案路线、合同与元数据同步、普通验证，以及接受显式前向矩阵 `not_run` 残余后的生命周期关闭 | [ADR-0011](adr/0011-ask-delivery-route-before-auditing-ambiguous-invocations.md) |
 | [长期文档收缩完整性补强方案](2026-08-13-PROJECT-DOC-CONSISTENCY-SEMANTIC-COVERAGE-20260813-语义内容块与跨真源重叠覆盖补强方案.md) | 记录逐长期文档收缩处置、完整／增量边界、两项条件测试设计规则、过拟合前向方案收缩及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [长期文档全量语义审计与收缩复核补强方案](2026-08-15-PROJECT-DOC-CONSISTENCY-EXHAUSTIVE-REVIEW-20260815-长期文档全量语义审计与收缩复核补强方案.md) | 记录全部实质内容双遍覆盖、重复与声明漂移检查、无需收缩负向证明、查漏／防误伤 review 及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [长期文档可见覆盖证据与复核有效性补强方案](2026-08-15-PROJECT-DOC-CONSISTENCY-VISIBLE-COVERAGE-20260815-长期文档可见覆盖证据与复核有效性补强方案.md) | 记录逐长期文档可见覆盖条目、集合式无需收缩禁令、查漏／防误伤复核证据及普通验证 | [project-doc-consistency](../../project-doc-consistency/SKILL.md) |
 | [骨架最小充分测试与正式认证收缩方案](2026-08-28-SKELETON-TEST-CAPABILITY-CONTRACTION-20260828-骨架最小充分测试与正式认证收缩方案.md) | 记录当时的完整测试、T-DOC 选择和普通验证收缩；现行门禁决定见 ADR-0016 | [ADR-0016](../../docs/adr/0016-stop-shipping-the-generic-doc-gate.md) |
 | [骨架治理精简方案](2026-08-28-PROJECT-DOC-SKELETON-GOVERNANCE-SLIM-20260828-骨架治理精简方案.md) | 记录当时的生命周期、方案交互和 T-DOC 分层；现行建议型审计决定见 ADR-0015 | [ADR-0015](../../docs/adr/0015-document-skills-are-advisory-auditors.md) |
 | [项目文档 Skill 建议型审计轻量化方案](2026-08-30-PROJECT-DOC-ADVISORY-AUDIT-20260830-项目文档Skill建议型审计轻量化方案.md) | 记录三个 Skill 改为显式只读建议型审计、删除共享长协议与通用 T-DOC、收缩回归和普通验证的实施结果 | [ADR-0015](../../docs/adr/0015-document-skills-are-advisory-auditors.md) |
+| [仓库治理残余收缩方案](2026-08-30-REPO-GOVERNANCE-CONTRACTION-20260830-仓库治理残余收缩方案.md) | 记录失效待办清理、历史 ADR 退出活动入口、安装器单根收缩和包装测试解除目录白名单的实施结果 | [项目文档](../../docs/README.md) |

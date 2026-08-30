@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 import unittest
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -14,10 +15,23 @@ SKILL_NAMES = (
     "project-doc-consistency",
     "project-doc-contraction",
 )
+LINK_RE = re.compile(r"\[[^\]\n]*\]\(\s*(<[^>\n]+>|[^)\s]+)")
 
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def local_link_paths(text: str) -> list[str]:
+    result: list[str] = []
+    for match in LINK_RE.finditer(text):
+        destination = match.group(1).strip()
+        if destination.startswith("<") and destination.endswith(">"):
+            destination = destination[1:-1]
+        parsed = urlsplit(destination)
+        if not parsed.scheme and not parsed.netloc and parsed.path:
+            result.append(unquote(parsed.path))
+    return result
 
 
 class ProjectDocSkillPackagingTest(unittest.TestCase):
@@ -35,11 +49,13 @@ class ProjectDocSkillPackagingTest(unittest.TestCase):
                     agent_text,
                     r"(?m)^\s*allow_implicit_invocation:\s*false\s*$",
                 )
-                self.assertFalse((skill_root / "assets").exists())
-                self.assertFalse((skill_root / "references").exists())
-
-    def test_no_shared_runtime_package(self) -> None:
-        self.assertFalse((ROOT / "project-doc-shared").exists())
+                for relative in local_link_paths(skill_text):
+                    target = (skill_root / relative).resolve()
+                    self.assertTrue(
+                        target.is_relative_to(skill_root.resolve()),
+                        f"{name} 运行入口引用包外路径: {relative}",
+                    )
+                    self.assertTrue(target.exists(), f"{name} 缺少本地依赖: {relative}")
 
 
 if __name__ == "__main__":

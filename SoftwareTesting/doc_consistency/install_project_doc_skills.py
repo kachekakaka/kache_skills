@@ -16,11 +16,11 @@ from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROVENANCE_NAME = "SOURCE-PROVENANCE.json"
-SKILL_ROOTS = {
-    "project-doc-consistency": ("project-doc-consistency",),
-    "project-doc-contraction": ("project-doc-contraction",),
-    "project-doc-skeleton": ("project-doc-skeleton",),
-}
+SKILL_NAMES = (
+    "project-doc-consistency",
+    "project-doc-contraction",
+    "project-doc-skeleton",
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -31,17 +31,16 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def iter_files(root: Path, roots: Iterable[str]) -> dict[str, str]:
+def iter_files(root: Path, skill_name: str) -> dict[str, str]:
     result: dict[str, str] = {}
-    for root_name in roots:
-        base = root / root_name
-        if not base.is_dir():
-            raise FileNotFoundError(f"缺少目录: {base}")
-        for path in sorted(base.rglob("*")):
-            if not path.is_file() or path.name == PROVENANCE_NAME:
-                continue
-            relative = path.relative_to(root).as_posix()
-            result[relative] = sha256_file(path)
+    base = root / skill_name
+    if not base.is_dir():
+        raise FileNotFoundError(f"缺少目录: {base}")
+    for path in sorted(base.rglob("*")):
+        if not path.is_file() or path.name == PROVENANCE_NAME:
+            continue
+        relative = path.relative_to(root).as_posix()
+        result[relative] = sha256_file(path)
     return result
 
 
@@ -88,14 +87,13 @@ def build_manifest(
     skill_name: str,
     metadata: dict[str, str],
 ) -> dict[str, object]:
-    roots = SKILL_ROOTS[skill_name]
     return {
         "schema_version": 1,
         "skill_name": skill_name,
         **metadata,
         "installed_at_utc": datetime.now(timezone.utc).isoformat(),
-        "roots": list(roots),
-        "files": iter_files(target_root, roots),
+        "roots": [skill_name],
+        "files": iter_files(target_root, skill_name),
     }
 
 
@@ -134,9 +132,8 @@ def verify_manifest(target_root: Path, skill_name: str) -> dict[str, object]:
         issues.append("skill_name 不匹配")
     roots = manifest.get("roots")
     files = manifest.get("files")
-    if not isinstance(roots, list) or not all(isinstance(item, str) for item in roots):
-        issues.append("roots 必须是字符串列表")
-        roots = []
+    if roots != [skill_name]:
+        issues.append(f"roots 必须只包含 {skill_name}")
     if not isinstance(files, dict) or not all(
         isinstance(path, str) and isinstance(value, str)
         for path, value in (files.items() if isinstance(files, dict) else ())
@@ -145,11 +142,10 @@ def verify_manifest(target_root: Path, skill_name: str) -> dict[str, object]:
         files = {}
 
     actual: dict[str, str] = {}
-    if roots:
-        try:
-            actual = iter_files(target_root, roots)
-        except (OSError, RuntimeError) as exc:
-            issues.append(str(exc))
+    try:
+        actual = iter_files(target_root, skill_name)
+    except (OSError, RuntimeError) as exc:
+        issues.append(str(exc))
 
     expected_paths = set(files)
     actual_paths = set(actual)
@@ -185,21 +181,13 @@ def install(
     metadata: dict[str, str],
 ) -> list[dict[str, object]]:
     selected = tuple(dict.fromkeys(skills))
-    unknown = [name for name in selected if name not in SKILL_ROOTS]
+    unknown = [name for name in selected if name not in SKILL_NAMES]
     if unknown:
         raise ValueError(f"未知 Skill: {', '.join(unknown)}")
 
-    roots: list[str] = []
-    for skill_name in selected:
-        for root_name in SKILL_ROOTS[skill_name]:
-            if root_name not in roots:
-                roots.append(root_name)
-
     target_root.mkdir(parents=True, exist_ok=True)
-    for root_name in roots:
-        mirror_directory(source_root / root_name, target_root / root_name)
-
     for skill_name in selected:
+        mirror_directory(source_root / skill_name, target_root / skill_name)
         write_manifest(target_root, skill_name, metadata)
 
     results = [verify_manifest(target_root, name) for name in selected]
@@ -220,8 +208,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skills",
         nargs="+",
-        choices=sorted(SKILL_ROOTS),
-        default=sorted(SKILL_ROOTS),
+        choices=SKILL_NAMES,
+        default=SKILL_NAMES,
     )
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--verify-only", action="store_true")

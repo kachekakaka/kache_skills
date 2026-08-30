@@ -3,7 +3,7 @@
 - 原待办：`DOC-SKELETON-RESPONSIBILITY-REFACTOR`（已退出活动列表）
 - 状态：已完成
 - 性质：由原职责收缩总待办拆出的 skeleton 独立施工方案
-- 决策依据：[ADR-0003](../../docs/adr/0003-separate-structure-governance-from-content-consistency.md)、[ADR-0004](../../docs/adr/0004-separate-review-plan-and-construction.md) 与 [`CONTEXT.md`](../../CONTEXT.md)
+- 决策依据：[ADR-0003](adr/0003-separate-structure-governance-from-content-consistency.md)、[ADR-0004](adr/0004-separate-review-plan-and-construction.md) 与 [`CONTEXT.md`](../../CONTEXT.md)
 
 ## 拆分结论
 
