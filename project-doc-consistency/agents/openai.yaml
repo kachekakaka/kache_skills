@@ -1,7 +1,7 @@
 interface:
-  display_name: "项目文档一致性检查与方案"
-  short_description: "只读核对活动文档的事实、契约、状态、所有权和直接消费者"
-  default_prompt: "使用 $project-doc-consistency 只做项目文档一致性检查；不要做内容收缩。开始时校验 SOURCE-PROVENANCE.json；full 完成四类跨载体反证和候选闭环。方案默认评审一次，实质修订后最多追加一轮；我已明确要求保存且最终候选没有漂移时直接一次保存，否则保存前再问，随后停止。"
+  display_name: "项目文档一致性建议审计"
+  short_description: "只读核对活动文档声明与一层直接事实并报告冲突和建议"
+  default_prompt: "使用 $project-doc-consistency 只读核对当前活动文档与一层直接事实，并简短报告不一致。"
 
 policy:
   allow_implicit_invocation: false

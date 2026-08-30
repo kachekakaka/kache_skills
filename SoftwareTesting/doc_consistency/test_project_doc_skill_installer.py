@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""验证项目文档 Skill 精确镜像安装和来源清单。"""
+"""验证项目文档 Skill 独立镜像安装和来源清单。"""
 
 from __future__ import annotations
 
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,82 +20,66 @@ INSTALLER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(INSTALLER)
 
 
+def make_skill(source: Path, name: str) -> None:
+    (source / name / "agents").mkdir(parents=True)
+    (source / name / "SKILL.md").write_text(
+        f"---\nname: {name}\ndescription: test\n---\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (source / name / "agents/openai.yaml").write_text(
+        "policy:\n  allow_implicit_invocation: false\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+METADATA = {
+    "source_repository": "https://example.invalid/repo.git",
+    "source_branch": "main",
+    "source_commit": "a" * 40,
+}
+
+
 class ProjectDocSkillInstallerTest(unittest.TestCase):
-    def test_exact_mirror_and_provenance_verification(self) -> None:
+    def test_each_skill_has_only_its_own_install_root(self) -> None:
+        for skill_name, roots in INSTALLER.SKILL_ROOTS.items():
+            with self.subTest(skill=skill_name):
+                self.assertEqual((skill_name,), roots)
+
+    def test_exact_independent_mirror_and_provenance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source = root / "source"
             target = root / "target"
-            (source / "project-doc-consistency/references").mkdir(parents=True)
-            (source / "project-doc-shared/references").mkdir(parents=True)
-            (source / "project-doc-consistency/SKILL.md").write_text(
-                "skill\n", encoding="utf-8", newline="\n"
-            )
-            (source / "project-doc-consistency/references/example.md").write_text(
-                "reference\n", encoding="utf-8", newline="\n"
-            )
-            (source / "project-doc-shared/references/shared.md").write_text(
-                "shared\n", encoding="utf-8", newline="\n"
-            )
-            (target / "project-doc-consistency").mkdir(parents=True)
-            (target / "project-doc-consistency/stale.txt").write_text(
-                "stale\n", encoding="utf-8"
-            )
+            skill_name = "project-doc-consistency"
+            make_skill(source, skill_name)
+            (target / skill_name).mkdir(parents=True)
+            (target / skill_name / "stale.txt").write_text("stale\n", encoding="utf-8")
 
-            metadata = {
-                "source_repository": "https://example.invalid/repo.git",
-                "source_branch": "main",
-                "source_commit": "a" * 40,
-            }
-            results = INSTALLER.install(
-                source,
-                target,
-                ("project-doc-consistency",),
-                metadata,
-            )
+            results = INSTALLER.install(source, target, (skill_name,), METADATA)
 
             self.assertEqual("verified", results[0]["state"])
-            self.assertFalse(
-                (target / "project-doc-consistency/stale.txt").exists()
-            )
-            manifest = target / "project-doc-consistency/SOURCE-PROVENANCE.json"
-            self.assertTrue(manifest.is_file())
-
-            verified = INSTALLER.verify_manifest(
-                target, "project-doc-consistency"
-            )
-            self.assertEqual("verified", verified["state"], verified)
+            self.assertFalse((target / skill_name / "stale.txt").exists())
+            self.assertFalse((target / "project-doc-shared").exists())
+            manifest_path = target / skill_name / "SOURCE-PROVENANCE.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual([skill_name], manifest["roots"])
 
     def test_modified_installed_file_is_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source = root / "source"
             target = root / "target"
-            (source / "project-doc-consistency").mkdir(parents=True)
-            (source / "project-doc-shared/references").mkdir(parents=True)
-            (source / "project-doc-consistency/SKILL.md").write_text(
-                "skill\n", encoding="utf-8", newline="\n"
-            )
-            (source / "project-doc-shared/references/shared.md").write_text(
-                "shared\n", encoding="utf-8", newline="\n"
-            )
-            INSTALLER.install(
-                source,
-                target,
-                ("project-doc-consistency",),
-                {
-                    "source_repository": "repo",
-                    "source_branch": "main",
-                    "source_commit": "b" * 40,
-                },
-            )
-            (target / "project-doc-shared/references/shared.md").write_text(
+            skill_name = "project-doc-consistency"
+            make_skill(source, skill_name)
+            INSTALLER.install(source, target, (skill_name,), METADATA)
+            (target / skill_name / "SKILL.md").write_text(
                 "changed\n", encoding="utf-8", newline="\n"
             )
 
-            result = INSTALLER.verify_manifest(
-                target, "project-doc-consistency"
-            )
+            result = INSTALLER.verify_manifest(target, skill_name)
+
             self.assertEqual("mismatch", result["state"])
             self.assertTrue(
                 any("SHA-256 不匹配" in issue for issue in result["issues"]),

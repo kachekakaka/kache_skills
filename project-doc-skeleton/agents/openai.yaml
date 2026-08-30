@@ -1,7 +1,7 @@
 interface:
-  display_name: "项目文档骨架检查与方案"
-  short_description: "只读完整检查项目文档结构，按请求报告或保存可实施方案"
-  default_prompt: "使用 $project-doc-skeleton 检查当前项目文档骨架；意图不清时先询问只要报告还是形成方案。方案默认做一次有界评审，实质修订后最多追加一轮；我已明确要求保存且最终候选没有漂移时直接一次保存，否则保存前再问，随后停止。"
+  display_name: "项目文档结构建议审计"
+  short_description: "只读检查项目文档入口、所有者与活动历史边界并给出轻量建议"
+  default_prompt: "使用 $project-doc-skeleton 只读检查当前项目的真实文档结构问题，并给出简短建议。"
 
 policy:
   allow_implicit_invocation: false

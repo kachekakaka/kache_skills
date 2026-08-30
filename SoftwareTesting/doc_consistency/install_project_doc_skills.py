@@ -16,9 +16,9 @@ from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROVENANCE_NAME = "SOURCE-PROVENANCE.json"
-CALLABLE_DEPENDENCIES = {
-    "project-doc-consistency": ("project-doc-consistency", "project-doc-shared"),
-    "project-doc-contraction": ("project-doc-contraction", "project-doc-shared"),
+SKILL_ROOTS = {
+    "project-doc-consistency": ("project-doc-consistency",),
+    "project-doc-contraction": ("project-doc-contraction",),
     "project-doc-skeleton": ("project-doc-skeleton",),
 }
 
@@ -88,7 +88,7 @@ def build_manifest(
     skill_name: str,
     metadata: dict[str, str],
 ) -> dict[str, object]:
-    roots = CALLABLE_DEPENDENCIES[skill_name]
+    roots = SKILL_ROOTS[skill_name]
     return {
         "schema_version": 1,
         "skill_name": skill_name,
@@ -185,13 +185,13 @@ def install(
     metadata: dict[str, str],
 ) -> list[dict[str, object]]:
     selected = tuple(dict.fromkeys(skills))
-    unknown = [name for name in selected if name not in CALLABLE_DEPENDENCIES]
+    unknown = [name for name in selected if name not in SKILL_ROOTS]
     if unknown:
         raise ValueError(f"未知 Skill: {', '.join(unknown)}")
 
     roots: list[str] = []
     for skill_name in selected:
-        for root_name in CALLABLE_DEPENDENCIES[skill_name]:
+        for root_name in SKILL_ROOTS[skill_name]:
             if root_name not in roots:
                 roots.append(root_name)
 
@@ -220,8 +220,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skills",
         nargs="+",
-        choices=sorted(CALLABLE_DEPENDENCIES),
-        default=sorted(CALLABLE_DEPENDENCIES),
+        choices=sorted(SKILL_ROOTS),
+        default=sorted(SKILL_ROOTS),
     )
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--verify-only", action="store_true")

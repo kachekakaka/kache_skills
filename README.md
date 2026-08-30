@@ -1,49 +1,36 @@
 # kache_skills
 
-本仓库开发和验证三个只能显式调用、不会自动互相调用的项目文档 Skill：
+本仓库开发三个只能显式调用、彼此独立的项目文档建议型审计 Skill：
 
-- [`project-doc-skeleton`](project-doc-skeleton/SKILL.md)：只读检查项目文档骨架、生命周期、测试治理和机械门禁；用户
-  明确要求时只保存方案，后续由普通任务实施。
-- [`project-doc-consistency`](project-doc-consistency/SKILL.md)：只读核对活动文档的事实、契约、状态、所有权和直接
-  消费者；用户明确要求时只保存纯一致性方案。
-- [`project-doc-contraction`](project-doc-contraction/SKILL.md)：只在用户确认当前或指定的不可变提交已完成一致性整改并
-  做过一致性验证后，只读审计重复、镜像、过程快照、职责错位和复杂内容；裸调用默认识别当前 `HEAD`，只问一次确认。
+- [`project-doc-skeleton`](project-doc-skeleton/SKILL.md)：只读发现入口、导航、所有者和活动／历史边界中的真实结构问题。
+- [`project-doc-consistency`](project-doc-consistency/SKILL.md)：只读核对活动文档声明与一层直接事实，报告不一致和无法裁决的冲突。
+- [`project-doc-contraction`](project-doc-contraction/SKILL.md)：只读识别重复、镜像、过程残留、内容错位和非必要复杂度，证据不足时保留内容。
 
-两个内容 Skill 共用的非可调用参考位于
-[`project-doc-shared`](project-doc-shared/README.md)。它只提供长审计恢复与验证规划，不包含 `SKILL.md`，也不让
-任一 Skill 调用另一个 Skill。
+三个 Skill 默认从目标项目自己的入口检查全部活动文档，事实证据只展开一层直接关系；入口无法可靠界定范围时报告未覆盖，
+不改为全仓扫描。它们只交付简短问题清单和建议，不写项目、不形成方案、不管理生命周期、不运行验证，也不自动调用彼此。
 
-当前长期说明从[项目文档](docs/README.md)进入，验证入口见[软件测试](SoftwareTesting/README.md)。
+本项目不再交付标准骨架、通用 T-DOC、共享长审计协议或目标项目测试资产。成熟项目保留自己的路径、治理和验证方式。
 
 ## 构建与交付
 
-本项目无独立构建步骤。交付时按用途安装：
+本项目无独立构建步骤。三个 Skill 都是自包含目录，可以分别交付：
 
 - `project-doc-skeleton/`
-- `project-doc-consistency/` + `project-doc-shared/`
-- `project-doc-contraction/` + `project-doc-shared/`
+- `project-doc-consistency/`
+- `project-doc-contraction/`
 
-Skill 安装、commit、push、PR 和发布仍需分别取得明确授权。取得安装授权后，推荐使用：
+Skill 安装、commit、push、PR 和发布分别需要明确授权。取得安装授权后，可使用：
 
 ```text
 python -B -X utf8 SoftwareTesting/doc_consistency/install_project_doc_skills.py --apply --skills project-doc-consistency
 ```
 
-安装器精确镜像目标目录，并在可调用 Skill 中生成 `SOURCE-PROVENANCE.json`；可用 `--verify-only` 复核源提交与逐文件
-SHA-256。直接复制仍允许，但缺少或不匹配 provenance 时审计只能报告版本无法验证。
+安装器精确镜像所选 Skill，并生成 `SOURCE-PROVENANCE.json` 供安装时或后续显式校验来源；该清单不是 Skill 运行前置，
+也不证明审计结论正确。
 
-标准骨架路线的 T-DOC 从 `project-doc-skeleton/assets/SoftwareTesting/doc_consistency/` 整文件交付并逐字节比较：
+## 验证与文档
 
-- [suite 说明](project-doc-skeleton/assets/SoftwareTesting/doc_consistency/README.md)
-- [文档机械门禁](project-doc-skeleton/assets/SoftwareTesting/doc_consistency/test_doc_consistency.py)
-- [门禁规则夹具](project-doc-skeleton/assets/SoftwareTesting/doc_consistency/test_doc_consistency_rules.py)
-
-## 验证入口
-
-- [T-DOC](SoftwareTesting/doc_consistency/README.md)：验证标准骨架、活动入口、生命周期、归档、顶层 Markdown 根
-  所有权，以及本仓库三个 Skill 的职责隔离、consistency 反证审计和安装 provenance 合同。
-- [项目文档 Skill 前向试用](SoftwareTesting/manual/project_doc_skills/README.md)：`explicit` 协议；当前标准矩阵
-  继续验证 skeleton 与 consistency 的既有用户可观察合同，不在普通验证中自动执行。
-
-未完成事项统一登记在[已知问题与待做需求](docs/已知问题与待做需求.md)，历史实施和验证结果从
-[文档归档](archive/docs/README.md)进入。
+- [轻量验证入口](SoftwareTesting/doc_consistency/README.md)：检查本仓库非历史 Markdown 本地链接、Skill 包装边界和安装器。
+- [可选行为样例](SoftwareTesting/manual/project_doc_skills/README.md)：仅在用户显式要求时做隔离前向试用。
+- [项目文档](docs/README.md)：当前需求、设计、待办和测试说明。
+- [历史归档](archive/docs/README.md)：保留过往方案及其当时语境。

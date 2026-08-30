@@ -1,7 +1,7 @@
 interface:
-  display_name: "项目文档内容收缩审计与方案"
-  short_description: "基于已验证一致性提交，只读查找重复、镜像、过程、错位和复杂内容"
-  default_prompt: "使用 $project-doc-contraction 只做项目文档内容收缩；若我未给 SHA，先用只读 Git 将当前 HEAD 作为一致性基线候选，只问一句是否确认已完成整改与验证，不索要日志。方案默认评审一次，实质修订后最多追加一轮；我已明确要求保存且最终候选没有漂移时直接一次保存，否则保存前再问，随后停止。"
+  display_name: "项目文档收缩建议审计"
+  short_description: "只读识别活动文档重复、错位与非必要复杂度并给出收缩建议"
+  default_prompt: "使用 $project-doc-contraction 只读识别当前活动文档中有证据支持的收缩项，并给出简短建议。"
 
 policy:
   allow_implicit_invocation: false
